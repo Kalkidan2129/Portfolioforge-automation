@@ -1,4 +1,5 @@
 const readline = require('readline');
+const { chromium } = require('playwright');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -81,4 +82,14 @@ async function run() {
   rl.close();
 }
 
-run();
+async function testBrowser() {
+  console.log("Starting browser test...");
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.goto('https://example.com');
+  await page.waitForTimeout(3000);
+  await browser.close();
+  console.log("Browser test complete.");
+}
+
+testBrowser();
