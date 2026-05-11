@@ -84,10 +84,10 @@ async function run() {
 
 async function testBrowser() {
   console.log("Starting browser test...");
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
-  await page.goto('https://example.com');
-  await page.waitForTimeout(3000);
+  await page.goto('https://app.colaberry.com');
+  await page.waitForTimeout(30000);
   await browser.close();
   console.log("Browser test complete.");
 }
