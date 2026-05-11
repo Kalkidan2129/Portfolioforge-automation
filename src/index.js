@@ -87,7 +87,12 @@ async function testBrowser() {
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
   await page.goto('https://app.colaberry.com');
-  await page.waitForTimeout(30000);
+  
+  // Wait for login success (URL changes to dashboard or other authenticated page)
+  await page.waitForURL(/\/(dashboard|home|app|profile|portal).*/i, { timeout: 0 });
+  
+  console.log("Login completed successfully");
+  await page.waitForTimeout(10000);
   await browser.close();
   console.log("Browser test complete.");
 }
