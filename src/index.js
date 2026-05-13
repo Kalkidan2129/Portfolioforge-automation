@@ -83,6 +83,8 @@ async function run() {
 }
 
 async function testBrowser() {
+  const projectUrl = 'https://app.colaberry.com/app/network/network/1659/projectinstructions';
+  
   console.log("Starting browser test...");
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
@@ -92,6 +94,12 @@ async function testBrowser() {
   await page.waitForURL(/\/(dashboard|home|app|profile|portal).*/i, { timeout: 0 });
   
   console.log("Login completed successfully");
+  
+  // Navigate to project page
+  await page.goto(projectUrl);
+  await page.waitForLoadState('load');
+  console.log("Project page loaded");
+  
   await page.waitForTimeout(10000);
   await browser.close();
   console.log("Browser test complete.");
