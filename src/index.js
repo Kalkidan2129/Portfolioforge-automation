@@ -100,7 +100,19 @@ async function testBrowser() {
   await page.waitForLoadState('load');
   console.log("Project page loaded");
   
-  await page.waitForTimeout(10000);
+  // Extract project data
+  const projectTitle = await page.locator('h1.ng-binding').first().textContent();
+  const description = await page.locator('p.ng-binding').first().textContent();
+  const tags = (await page.locator('a.tagstyle.ng-binding').allTextContents())
+    .map(tag => tag.trim())
+    .filter(tag => tag !== '');
+  
+  console.log('\n--- Extracted Project Data ---');
+  console.log('Title:', projectTitle);
+  console.log('Description:', description);
+  console.log('Tags:', tags.length > 0 ? tags.join(', ') : 'None');
+  
+  await page.waitForTimeout(300000);
   await browser.close();
   console.log("Browser test complete.");
 }
