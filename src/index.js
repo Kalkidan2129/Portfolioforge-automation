@@ -107,10 +107,18 @@ async function testBrowser() {
     .map(tag => tag.trim())
     .filter(tag => tag !== '');
   
+  // Extract additional project elements
+  const projectImage = await page.locator('div.col-sm-6.hidden-xs img').first().getAttribute('src');
+  const stepByStepLink = await page.locator('a:has-text("Step By Step")').first().getAttribute('href');
+  const tasksLink = await page.locator('a.btn.btn-primary').first().getAttribute('href');
+  
   console.log('\n--- Extracted Project Data ---');
   console.log('Title:', projectTitle);
   console.log('Description:', description);
   console.log('Tags:', tags.length > 0 ? tags.join(', ') : 'None');
+  console.log('Project Image:', projectImage);
+  console.log('Step By Step Link:', stepByStepLink);
+  console.log('Tasks Link:', tasksLink);
   
   await page.waitForTimeout(300000);
   await browser.close();
