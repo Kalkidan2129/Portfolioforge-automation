@@ -112,13 +112,18 @@ async function testBrowser() {
   const stepByStepLink = await page.locator('a:has-text("Step By Step")').first().getAttribute('href');
   const tasksLink = await page.locator('a.btn.btn-primary').first().getAttribute('href');
   
+  // Create structured project data object
+  const projectData = {
+    title: projectTitle,
+    description: description,
+    tags: tags,
+    imageUrl: projectImage,
+    stepByStepLink: stepByStepLink,
+    tasksLink: tasksLink
+  };
+  
   console.log('\n--- Extracted Project Data ---');
-  console.log('Title:', projectTitle);
-  console.log('Description:', description);
-  console.log('Tags:', tags.length > 0 ? tags.join(', ') : 'None');
-  console.log('Project Image:', projectImage);
-  console.log('Step By Step Link:', stepByStepLink);
-  console.log('Tasks Link:', tasksLink);
+  console.log(JSON.stringify(projectData, null, 2));
   
   await page.waitForTimeout(300000);
   await browser.close();
