@@ -1,3 +1,4 @@
+const fs = require('fs');
 const readline = require('readline');
 const { chromium } = require('playwright');
 
@@ -148,6 +149,13 @@ ${projectData.imageUrl ? `![Project Image](${projectData.imageUrl})` : 'No image
 
   console.log('\n--- Generated README ---');
   console.log(readmeContent);
+  
+  // Save README to file
+  fs.mkdirSync('output', { recursive: true });
+  fs.writeFileSync('output/README.md', readmeContent);
+  fs.writeFileSync('output/project-data.json', JSON.stringify(projectData, null, 2));
+  console.log('\nREADME saved to output/README.md');
+  console.log('Project data saved to output/project-data.json');
   
   await page.waitForTimeout(300000);
   await browser.close();
