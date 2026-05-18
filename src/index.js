@@ -125,6 +125,30 @@ async function testBrowser() {
   console.log('\n--- Extracted Project Data ---');
   console.log(JSON.stringify(projectData, null, 2));
   
+  // Generate markdown README
+  const tagsList = projectData.tags.length > 0 
+    ? projectData.tags.map(tag => `- ${tag}`).join('\n') 
+    : 'No tags available';
+  
+  const readmeContent = `# ${projectData.title}
+
+## Overview
+${projectData.description || 'No description available.'}
+
+## Technologies
+${tagsList}
+
+## Project Image
+${projectData.imageUrl ? `![Project Image](${projectData.imageUrl})` : 'No image available.'}
+
+## Resources
+- [Step By Step Instructions](${projectData.stepByStepLink})
+- [View Tasks](${projectData.tasksLink})
+`;
+
+  console.log('\n--- Generated README ---');
+  console.log(readmeContent);
+  
   await page.waitForTimeout(300000);
   await browser.close();
   console.log("Browser test complete.");
