@@ -81,11 +81,14 @@ async function run() {
   });
   
   rl.close();
+  
+  // Run browser test with the first validated project link
+  if (links.length > 0) {
+    testBrowser(links[0]);
+  }
 }
 
-async function testBrowser() {
-  const projectUrl = 'https://app.colaberry.com/app/network/network/1659/projectinstructions';
-  
+async function testBrowser(projectUrl) {
   console.log("Starting browser test...");
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
@@ -162,4 +165,4 @@ ${projectData.imageUrl ? `![Project Image](${projectData.imageUrl})` : 'No image
   console.log("Browser test complete.");
 }
 
-testBrowser();
+run();
