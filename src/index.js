@@ -82,58 +82,67 @@ async function run() {
   
   rl.close();
   
-  // Run browser test with the first validated project link
+  // Run browser test for each validated project link
   if (links.length > 0) {
-    testBrowser(links[0]);
+    await processProjects(links);
   }
 }
 
-async function testBrowser(projectUrl) {
-  console.log("Starting browser test...");
+async function processProjects(projectLinks) {
+  console.log("Starting browser...");
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
+
   await page.goto('https://app.colaberry.com');
-  
-  // Wait for login success (URL changes to dashboard or other authenticated page)
+
   await page.waitForURL(/\/(dashboard|home|app|profile|portal).*/i, { timeout: 0 });
-  
+
   console.log("Login completed successfully");
-  
-  // Navigate to project page
+
+  for (let index = 0; index < projectLinks.length; index++) {
+    await processSingleProject(page, projectLinks[index], index + 1);
+  }
+
+  await page.waitForTimeout(300000);
+  await browser.close();
+  console.log("Browser workflow complete.");
+}
+
+async function processSingleProject(page, projectUrl, projectNumber) {
+  const outputFolder = `output/project-${projectNumber}`;
+
+  console.log(`\nProcessing project ${projectNumber}...`);
+
   await page.goto(projectUrl);
   await page.waitForLoadState('load');
   console.log("Project page loaded");
-  
-  // Extract project data
+
   const projectTitle = await page.locator('h1.ng-binding').first().textContent();
   const description = await page.locator('p.ng-binding').first().textContent();
   const tags = (await page.locator('a.tagstyle.ng-binding').allTextContents())
     .map(tag => tag.trim())
     .filter(tag => tag !== '');
-  
-  // Extract additional project elements
+
   const projectImage = await page.locator('div.col-sm-6.hidden-xs img').first().getAttribute('src');
   const stepByStepLink = await page.locator('a:has-text("Step By Step")').first().getAttribute('href');
   const tasksLink = await page.locator('a.btn.btn-primary').first().getAttribute('href');
-  
-  // Create structured project data object
+
   const projectData = {
     title: projectTitle,
-    description: description,
-    tags: tags,
+    description,
+    tags,
     imageUrl: projectImage,
-    stepByStepLink: stepByStepLink,
-    tasksLink: tasksLink
+    stepByStepLink,
+    tasksLink
   };
-  
+
   console.log('\n--- Extracted Project Data ---');
   console.log(JSON.stringify(projectData, null, 2));
-  
-  // Generate markdown README
-  const tagsList = projectData.tags.length > 0 
-    ? projectData.tags.map(tag => `- ${tag}`).join('\n') 
+
+  const tagsList = projectData.tags.length > 0
+    ? projectData.tags.map(tag => `- ${tag}`).join('\n')
     : 'No tags available';
-  
+
   const readmeContent = `# ${projectData.title}
 
 ## Overview
@@ -146,23 +155,15 @@ ${tagsList}
 ${projectData.imageUrl ? `![Project Image](${projectData.imageUrl})` : 'No image available.'}
 
 ## Resources
-- [Step By Step Instructions](${projectData.stepByStepLink})
-- [View Tasks](${projectData.tasksLink})
+- [Step By Step Instructions](${projectData.stepByStepLink || ''})
+- [View Tasks](${projectData.tasksLink || ''})
 `;
 
-  console.log('\n--- Generated README ---');
-  console.log(readmeContent);
-  
-  // Save README to file
-  fs.mkdirSync('output', { recursive: true });
-  fs.writeFileSync('output/README.md', readmeContent);
-  fs.writeFileSync('output/project-data.json', JSON.stringify(projectData, null, 2));
-  console.log('\nREADME saved to output/README.md');
-  console.log('Project data saved to output/project-data.json');
-  
-  await page.waitForTimeout(300000);
-  await browser.close();
-  console.log("Browser test complete.");
-}
+  fs.mkdirSync(outputFolder, { recursive: true });
+  fs.writeFileSync(`${outputFolder}/README.md`, readmeContent);
+  fs.writeFileSync(`${outputFolder}/project-data.json`, JSON.stringify(projectData, null, 2));
 
+  console.log(`README saved to ${outputFolder}/README.md`);
+  console.log(`Project data saved to ${outputFolder}/project-data.json`);
+}
 run();
