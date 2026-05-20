@@ -117,15 +117,15 @@ async function processSingleProject(page, projectUrl, projectNumber) {
   await page.waitForLoadState('load');
   console.log("Project page loaded");
 
-  const projectTitle = await page.locator('h1.ng-binding').first().textContent();
-  const description = await page.locator('p.ng-binding').first().textContent();
+  const projectTitle = (await page.locator('h1.ng-binding').first().textContent()) || 'Untitled Project';
+  const description = (await page.locator('p.ng-binding').first().textContent()) || '';
   const tags = (await page.locator('a.tagstyle.ng-binding').allTextContents())
     .map(tag => tag.trim())
     .filter(tag => tag !== '');
 
-  const projectImage = await page.locator('div.col-sm-6.hidden-xs img').first().getAttribute('src');
-  const stepByStepLink = await page.locator('a:has-text("Step By Step")').first().getAttribute('href');
-  const tasksLink = await page.locator('a.btn.btn-primary').first().getAttribute('href');
+  const projectImage = (await page.locator('div.col-sm-6.hidden-xs img').first().getAttribute('src')) || '';
+  const stepByStepLink = (await page.locator('a:has-text("Step By Step")').first().getAttribute('href')) || '';
+  const tasksLink = (await page.locator('a.btn.btn-primary').first().getAttribute('href')) || '';
 
   const projectData = {
     title: projectTitle,
