@@ -6,7 +6,7 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
-
+const allProjectsData = [];
 const links = [];
 const MAX_LINKS = 3;
 const MIN_LINKS = 1;
@@ -103,13 +103,43 @@ async function processProjects(projectLinks) {
     await processSingleProject(page, projectLinks[index], index + 1);
   }
 
+  const mainReadmeContent = `# Data Analytics Portfolio
+
+## Skills & Tools
+
+Power BI • SQL • Python • Excel • Data Analytics • Business Intelligence • Dashboard Development
+
+---
+
+## About
+
+This portfolio showcases selected data analytics and business intelligence projects generated from Colaberry project work.
+
+---
+
+## Projects
+
+${allProjectsData.map((project, index) => `
+### ${index + 1}. ${project.title}
+
+![Project Preview](${project.imageUrl || ''})
+
+${project.description ? project.description.substring(0, 180) + '...' : 'Project summary unavailable.'}
+
+[View Full Project](./project-${index + 1}/README.md)
+`).join('\n')}
+`;
+
+  fs.writeFileSync('generated-portfolio/README.md', mainReadmeContent);
+  console.log('Main portfolio README saved to generated-portfolio/README.md');
+
   await page.waitForTimeout(300000);
   await browser.close();
   console.log("Browser workflow complete.");
 }
 
 async function processSingleProject(page, projectUrl, projectNumber) {
-  const outputFolder = `output/project-${projectNumber}`;
+  const outputFolder = `generated-portfolio/project-${projectNumber}`;
 
   console.log(`\nProcessing project ${projectNumber}...`);
 
@@ -135,7 +165,7 @@ async function processSingleProject(page, projectUrl, projectNumber) {
     stepByStepLink,
     tasksLink
   };
-
+  allProjectsData.push(projectData);
   console.log('\n--- Extracted Project Data ---');
   console.log(JSON.stringify(projectData, null, 2));
 
