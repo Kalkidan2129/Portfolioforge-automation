@@ -103,30 +103,168 @@ async function processProjects(projectLinks) {
     await processSingleProject(page, projectLinks[index], index + 1);
   }
 
-  const mainReadmeContent = `# Data Analytics Portfolio
+  const normalizeSkillKey = (skill) => {
+  return skill
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+};
+
+  const formatSkillLabel = (skill) => {
+  return skill
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/python\s*-\s*pandas/i, 'Pandas')
+    .replace(/powerbi/i, 'Power BI');
+};
+
+  const skillMap = new Map();
+
+allProjectsData
+  .flatMap(project => project.tags || [])
+  .forEach(skill => {
+    const label = formatSkillLabel(skill);
+    const key = normalizeSkillKey(label);
+
+    if (!skillMap.has(key)) {
+      skillMap.set(key, label);
+    }
+  });
+
+const excludedSkillKeys = new Set([
+  'instructions',
+  'casestudy'
+]);
+
+const skills = [...skillMap.entries()]
+  .filter(([key]) => !excludedSkillKeys.has(key))
+  .map(([, label]) => label);
+
+const colors = [
+  'F2C811',
+  '025E8C',
+  '3776AB',
+  '217346',
+  'FF7A00',
+  '00A6A6',
+  '6A5ACD',
+  'D83B01'
+];
+
+const skillsBadges = skills.map((skill, index) => {
+  const color = colors[index % colors.length];
+
+  return `<img src="https://img.shields.io/badge/${encodeURIComponent(skill)}-${color}?style=for-the-badge&logoColor=white" alt="${skill}">`;
+}).join(' ');
+
+function generateProjectSummary(project) {
+  const title = project.title || 'data analytics project';
+
+  const tools = (project.tags || [])
+    .filter(tag =>
+      ['Power BI', 'Python', 'Excel', 'SQL', 'ETL', 'Machine Learning', 'Pandas']
+      .includes(tag)
+    )
+    .slice(0, 4);
+
+  const toolsText = tools.length > 0
+    ? ` using ${tools.join(', ')}`
+    : '';
+
+  return `This project focuses on ${title.toLowerCase()}${toolsText} to deliver business insights and analytics solutions.`;
+}
+
+function generatePortfolioAbout(projects) {
+  const projectCount = projects.length;
+
+  const allTags = [...new Set(
+    projects.flatMap(project => project.tags || [])
+  )];
+
+  const focusKeywords = [];
+
+if (allTags.some(tag => /forecast/i.test(tag))) {
+  focusKeywords.push('forecasting');
+}
+
+if (allTags.some(tag => /telecommunications/i.test(tag))) {
+  focusKeywords.push('telecommunications');
+}
+
+if (allTags.some(tag => /retail/i.test(tag))) {
+  focusKeywords.push('retail intelligence');
+}
+
+if (allTags.some(tag => /machine learning|ai/i.test(tag))) {
+  focusKeywords.push('machine learning');
+}
+
+if (allTags.some(tag => /finance/i.test(tag))) {
+  focusKeywords.push('business performance analysis');
+}
+
+const focusAreas = focusKeywords.join(', ');
+
+  return `This portfolio highlights ${projectCount} data analytics and business intelligence project${projectCount > 1 ? 's' : ''}, focusing on ${focusAreas}. It demonstrates practical experience in transforming project work into clear, structured, and recruiter-friendly analytics stories.`;
+}
+
+function generatePortfolioTitle(projects) {
+  const allTags = projects.flatMap(project => project.tags || []);
+
+  if (allTags.some(tag => /machine learning|ai/i.test(tag))) {
+    return 'AI & Data Analytics Portfolio';
+  }
+
+  if (allTags.some(tag => /finance/i.test(tag))) {
+    return 'Finance & Data Analytics Portfolio';
+  }
+
+  if (allTags.some(tag => /retail/i.test(tag))) {
+    return 'Retail & Business Intelligence Portfolio';
+  }
+
+  return 'Data Analytics Portfolio';
+}
+
+  const mainReadmeContent = `# ${generatePortfolioTitle(allProjectsData)}
 
 ## Skills & Tools
 
-Power BI • SQL • Python • Excel • Data Analytics • Business Intelligence • Dashboard Development
+${skillsBadges}
 
 ---
 
 ## About
 
-This portfolio showcases selected data analytics and business intelligence projects generated from Colaberry project work.
+${generatePortfolioAbout(allProjectsData)}
 
 ---
 
 ## Projects
 
 ${allProjectsData.map((project, index) => `
-### ${index + 1}. ${project.title}
+<table>
+<tr>
+<td width="40%">
 
-![Project Preview](${project.imageUrl || ''})
+<img src="${project.imageUrl || ''}" width="100%">
 
-${project.description ? project.description.substring(0, 180) + '...' : 'Project summary unavailable.'}
+</td>
 
-[View Full Project](./project-${index + 1}/README.md)
+<td width="60%">
+
+## ${index + 1}. ${project.title}
+
+${generateProjectSummary(project)}
+
+<br><br>
+
+<a href="./project-${index + 1}/README.md">View Full Project →</a>
+
+</td>
+</tr>
+</table>
+
+<br>
 `).join('\n')}
 `;
 
@@ -169,24 +307,96 @@ async function processSingleProject(page, projectUrl, projectNumber) {
   console.log('\n--- Extracted Project Data ---');
   console.log(JSON.stringify(projectData, null, 2));
 
-  const tagsList = projectData.tags.length > 0
-    ? projectData.tags.map(tag => `- ${tag}`).join('\n')
-    : 'No tags available';
+  const excludedTags = ['Instructions', 'Case Study'];
 
-  const readmeContent = `# ${projectData.title}
+const normalizedTags = [...new Set(
+  projectData.tags
+    .map(tag => tag.trim())
+    .filter(tag => tag && !excludedTags.includes(tag))
+    .map(tag => {
+      if (/power\s*bi/i.test(tag)) return 'Power BI';
+      if (/python\s*-\s*pandas/i.test(tag)) return 'Pandas';
+      return tag;
+    })
+)];
 
-## Overview
-${projectData.description || 'No description available.'}
+const tagsList = normalizedTags.length > 0
+  ? normalizedTags.map(tag => `- ${tag}`).join('\n')
+  : 'No tags available';
 
-## Technologies
+function generateProjectDetails(project) {
+  const title = project.title || 'Untitled Project';
+  const description = project.description || 'No project description available.';
+  const tags = project.tags || [];
+
+  const excludedTags = ['Instructions', 'Case Study'];
+
+const cleanTags = [...new Set(
+  tags
+    .map(tag => tag.trim())
+    .filter(tag => tag && !excludedTags.includes(tag))
+)];
+
+  const toolsText = cleanTags
+   .slice(0, 5)
+   .join(', ') || 'data analytics tools';
+
+  return {
+    overview: description,
+    businessProblem: `This project uses available project information to explore ${title.toLowerCase()}, identify important patterns, and communicate business insights using ${toolsText}.`,
+    keyInsights: [
+      `Explored project context related to ${title.toLowerCase()}`,
+      `Used ${toolsText} to support analysis and reporting`,
+      `Transformed project information into a structured portfolio-ready case study`
+    ]
+  };
+}
+
+  const projectDetails = generateProjectDetails(projectData);
+  const readmeContent = `
+# ${projectData.title}
+
+## Project Overview
+
+${projectDetails.overview}
+
+---
+
+## Business Problem
+
+${projectDetails.businessProblem}
+
+---
+
+## Tools & Technologies
+
 ${tagsList}
 
-## Project Image
-${projectData.imageUrl ? `![Project Image](${projectData.imageUrl})` : 'No image available.'}
+---
 
-## Resources
-- [Step By Step Instructions](${projectData.stepByStepLink || ''})
-- [View Tasks](${projectData.tasksLink || ''})
+## Key Insights
+
+${projectDetails.keyInsights.map(insight => `- ${insight}`).join('\n')}
+
+---
+
+## Project Preview
+
+${projectData.imageUrl ? `![Project Preview](${projectData.imageUrl})` : 'No image available.'}
+
+---
+
+## Additional Resources
+
+${projectData.stepByStepLink ? `- [Step-by-Step Instructions](${projectData.stepByStepLink})` : ''}
+
+${projectData.tasksLink ? `- [Project Tasks Board](${projectData.tasksLink})` : ''}
+
+---
+
+## Portfolio Navigation
+
+[← Back to Portfolio Home](../README.md)
 `;
 
   fs.mkdirSync(outputFolder, { recursive: true });
