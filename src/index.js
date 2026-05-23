@@ -137,7 +137,9 @@ const excludedSkillKeys = new Set([
 
 const skills = [...skillMap.entries()]
   .filter(([key]) => !excludedSkillKeys.has(key))
-  .map(([, label]) => label);
+  .map(([, label]) => label)
+  .sort((a, b) => a.length - b.length)
+  .slice(0, 10);
 
 const colors = [
   'F2C811',
@@ -158,19 +160,34 @@ const skillsBadges = skills.map((skill, index) => {
 
 function generateProjectSummary(project) {
   const title = project.title || 'data analytics project';
+  const description = project.description || '';
+  const tags = project.tags || [];
 
-  const tools = (project.tags || [])
-    .filter(tag =>
-      ['Power BI', 'Python', 'Excel', 'SQL', 'ETL', 'Machine Learning', 'Pandas']
-      .includes(tag)
-    )
-    .slice(0, 4);
+  const cleanTags = [...new Set(
+    tags
+      .map(tag => tag.trim())
+      .filter(tag => tag && !['Instructions', 'Case Study'].includes(tag))
+      .map(tag => {
+        if (/power\s*bi|powerbi/i.test(tag)) return 'Power BI';
+        if (/python\s*-\s*pandas/i.test(tag)) return 'Pandas';
+        return tag;
+      })
+  )];
 
-  const toolsText = tools.length > 0
-    ? ` using ${tools.join(', ')}`
-    : '';
+  const toolsText = cleanTags.slice(0, 4).join(', ');
 
-  return `This project focuses on ${title.toLowerCase()}${toolsText} to deliver business insights and analytics solutions.`;
+  const actionVerb =
+    /dashboard|power bi|report/i.test(description + title) ? 'Built' :
+    /forecast|predict|machine learning|ai/i.test(description + title) ? 'Developed' :
+    /sales|revenue|performance/i.test(description + title) ? 'Analyzed' :
+    'Created';
+
+  const focus =
+    title
+      .replace(/\s*\([^)]*\)/g, '')
+      .toLowerCase();
+
+  return `${actionVerb} a data analytics project focused on ${focus}${toolsText ? ` using ${toolsText}` : ''} to uncover trends, support decision-making, and present business insights.`;
 }
 
 function generatePortfolioAbout(projects) {
