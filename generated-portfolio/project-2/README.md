@@ -9,8 +9,26 @@ This project dashboard assess year over year sales conducted among 45 random Wal
 
 ## Business Problem
 
-This project uses available project information to explore walmart store sales, identify important patterns, and communicate business insights using Data Analytics, PowerBI, Excel, Power BI, Retail.
+This project dashboard assess year over year sales conducted among 45 random Walmart Stores in the US between Feb 2010  and Oct 2012. Although this was a dawn era of coming out of  the great recession of 2008, these Walmart Stores have faced an impact in sales like any discount or department stores.
 
+---
+
+## Project Approach
+
+- Expected Final Dashboard
+- Import CSV file into Power BI Desktop
+- Create Calendar Table, and Refresh Date Table
+- Create a relationship between Walmart Table and Calendar Table
+- Create conditional columns
+- Create Sorting Columns for the conditional Columns, and custom sort them
+- Create DAX measures
+- Adding Project Logos and Title for the Dashboard
+- Create Slider and Visual Cards for KPIs
+- Line and Stacked Column Visuals
+- Scatter Chart
+- Create KPI Indicators and Logos for visuals
+- Final Dashboard
+- Deployment
 ---
 
 ## Tools & Technologies
@@ -25,9 +43,11 @@ This project uses available project information to explore walmart store sales, 
 
 ## Key Insights
 
-- Explored project context related to walmart store sales
-- Used Data Analytics, PowerBI, Excel, Power BI, Retail to support analysis and reporting
-- Transformed project information into a structured portfolio-ready case study
+- Completed workflow step: Expected Final Dashboard
+- Completed workflow step: Import CSV file into Power BI Desktop
+- Completed workflow step: Create Calendar Table, and Refresh Date Table
+- Completed workflow step: Create a relationship between Walmart Table and Calendar Table
+- Completed workflow step: Create conditional columns
 
 ---
 

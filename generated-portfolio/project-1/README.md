@@ -10,8 +10,39 @@ This project turns raw Vodafone telecom data into actionable business intelligen
 
 ## Business Problem
 
-This project uses available project information to explore revenue forecasting and performance analysis of vodafone qatar (2021–2023), identify important patterns, and communicate business insights using Data Analytics, ETL, Data Science, Reporting, Data Warehousing.
+What if telecom leaders could predict revenue shifts before they happen?
+This project turns raw Vodafone telecom data into actionable business intelligence. By transforming and enriching the dataset using NexusMax, Python, and Microsoft Fabric, it uncovers hidden patterns in revenue, churn, and customer behavior. The result is a unified, ML-ready data foundation that enables smarter forecasting, sharper performance tracking, and confident, data-driven decision-making for finance and strategy teams.
 
+---
+
+## Project Approach
+
+- Problem Statement and Objective
+- Executive Summary and Background
+- Data Overview
+- Methodology
+- Visualization
+- Case 1
+- Case 2
+- Solution Impact
+- Expected Dashboard
+- Importing Data
+- Create New Date Table
+- Create Measures table and Add New measures
+- Create relationship between tables
+- Add Background Image
+- Adding Logos and Title
+- Adding the Year Slicer
+- Adding KPI Cards
+- Adding Sub-KPIs
+- Adding Indicators
+- Adding Gauge
+- Adding Visual Chart - Line and Clustered Column Chart
+- Adding Stacked Column Chart
+- Adding Map Visual
+- Adding Line and Clustered Column Chart
+- Final Dashboard
+- Deployment
 ---
 
 ## Tools & Technologies
@@ -34,9 +65,11 @@ This project uses available project information to explore revenue forecasting a
 
 ## Key Insights
 
-- Explored project context related to revenue forecasting and performance analysis of vodafone qatar (2021–2023)
-- Used Data Analytics, ETL, Data Science, Reporting, Data Warehousing to support analysis and reporting
-- Transformed project information into a structured portfolio-ready case study
+- Completed workflow step: Problem Statement and Objective
+- Completed workflow step: Executive Summary and Background
+- Completed workflow step: Data Overview
+- Completed workflow step: Methodology
+- Completed workflow step: Visualization
 
 ---
 

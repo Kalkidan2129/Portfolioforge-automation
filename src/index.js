@@ -312,13 +312,84 @@ async function processSingleProject(page, projectUrl, projectNumber) {
   const stepByStepLink = (await page.locator('a:has-text("Step By Step")').first().getAttribute('href')) || '';
   const tasksLink = (await page.locator('a.btn.btn-primary').first().getAttribute('href')) || '';
 
+  const stepUrl = projectUrl.replace('projectinstructions', 'projectsteps');
+
+  await page.goto(stepUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+  await page.locator('text=Step Name:').first().waitFor({ timeout: 60000 });
+
+const stepButtons = page.locator('button[ng-click^="GetSteps"]');
+
+const detectedSteps = [...new Set(
+  (await stepButtons.allTextContents())
+    .map(text => text.trim())
+    .filter(text => /^\d+$/.test(text))
+    .map(Number)
+)].sort((a, b) => a - b);
+
+console.log(`Detected ${detectedSteps.length} real step numbers:`, detectedSteps);
+
+const allStepDetails = [];
+
+for (const stepNumber of detectedSteps) {
+
+  const stepButton = page
+  .locator(`button[ng-click^="GetSteps"]`)
+  .filter({ hasText: String(stepNumber) })
+  .locator('visible=true')
+  .first();
+
+await stepButton.click();
+
+  await page.waitForTimeout(2000);
+
+  let stepContent = await page.locator('body').innerText();
+
+stepContent = stepContent
+  .replace(/Chat/g, '')
+  .replace(/Contact Support/g, '')
+  .replace(/Job Help/g, '')
+  .replace(/^\s*\d+\s*$/gm, '')
+  .replace(/< back to Network Page/g, '')
+  .replace(/Tagged Projects[\s\S]*?(×|Please wait\.\.)/gi, '')
+  .replace(/\d+\s+Comments[\s\S]*/gi, '')
+  .replace(/\d+\s*Comments?/gi, '')
+  .replace(/[a-z]{8}\n\d{4}-\d{2}-\d{2}T[\s\S]*/gi, '')
+  .replace(/Add this comment/g, '')
+  .replace(/sans-serif/gi, '')
+  .replace(/Please wait\.\./gi, '')
+  .replace(/×/g, '')
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
+
+  allStepDetails.push({
+    stepNumber,
+    content: stepContent
+  });
+
+  console.log(`Extracted step ${stepNumber}`);
+}
+
+  const rawStepByStepContent = await page.locator('body').innerText();
+
+  const stepByStepContent = rawStepByStepContent
+  .replace(/Chat[\s\S]*?< back to Network Page/, '')
+  .replace(/Tagged Projects[\s\S]*/i, '')
+  .replace(/\d+\s+Comments[\s\S]*?Add this comment/gi, '')
+  .replace(/sans-serif/gi, '')
+  .replace(/×\s*Please wait\.\./i, '')
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
+
   const projectData = {
     title: projectTitle,
     description,
     tags,
     imageUrl: projectImage,
     stepByStepLink,
-    tasksLink
+    tasksLink,
+    stepByStepContent,
+    allStepDetails
   };
   allProjectsData.push(projectData);
   console.log('\n--- Extracted Project Data ---');
@@ -357,19 +428,42 @@ const cleanTags = [...new Set(
   const toolsText = cleanTags
    .slice(0, 5)
    .join(', ') || 'data analytics tools';
+  
+  const detailText = project.stepByStepContent || description;
+
+  const problemMatch = detailText.match(
+  /Detailed Instructions:\s*Problem Statement\s*([\s\S]*?)(Objective|Insight:|$)/i
+);
+
+  const businessProblem = problemMatch
+    ? problemMatch[1].trim()
+    : description;
 
   return {
     overview: description,
-    businessProblem: `This project uses available project information to explore ${title.toLowerCase()}, identify important patterns, and communicate business insights using ${toolsText}.`,
-    keyInsights: [
-      `Explored project context related to ${title.toLowerCase()}`,
-      `Used ${toolsText} to support analysis and reporting`,
-      `Transformed project information into a structured portfolio-ready case study`
-    ]
+    businessProblem: businessProblem,
+  keyInsights: project.allStepDetails
+  .slice(0, 5)
+  .map(step => {
+    const match = step.content.match(/Step Name:\s*(.*)/i);
+
+    return match
+      ? `Completed workflow step: ${match[1].trim()}`
+      : null;
+  })
+  .filter(Boolean),
   };
 }
 
   const projectDetails = generateProjectDetails(projectData);
+  const projectApproach = projectData.allStepDetails
+  .map(step => {
+    const stepNameMatch = step.content.match(/Step Name:\s*(.*)/i);
+    return stepNameMatch ? `- ${stepNameMatch[1].trim()}` : null;
+  })
+  .filter(Boolean)
+  .join('\n');
+
   const readmeContent = `
 # ${projectData.title}
 
@@ -383,6 +477,11 @@ ${projectDetails.overview}
 
 ${projectDetails.businessProblem}
 
+---
+
+## Project Approach
+
+${projectApproach || 'Project approach details unavailable.'}
 ---
 
 ## Tools & Technologies
