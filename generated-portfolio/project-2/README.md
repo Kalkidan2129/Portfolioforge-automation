@@ -1,67 +1,76 @@
 
 # Walmart Store Sales
 
-## Project Overview
+![Project Preview](https://app.colaberry.com/uploads/ProjectRequest/182/Walmart_es.gif)
 
-This project dashboard assess year over year sales conducted among 45 random Walmart Stores in the US between Feb 2010  and Oct 2012. Although this was a dawn era of coming out of  the great recession of 2008, these Walmart Stores have faced an impact in sales like any discount or department stores.
+## Project Summary
+
+This project analyzes Walmart store sales data using Power BI to identify sales trends, compare store performance, and support retail decision-making.
 
 ---
 
 ## Business Problem
 
-This project dashboard assess year over year sales conducted among 45 random Walmart Stores in the US between Feb 2010  and Oct 2012. Although this was a dawn era of coming out of  the great recession of 2008, these Walmart Stores have faced an impact in sales like any discount or department stores.
+Retail teams need to understand sales trends, seasonal patterns, and store-level performance so they can improve planning, operations, and business decision-making.
 
 ---
 
-## Project Approach
+## Objective
 
-- Expected Final Dashboard
+- Analyze Walmart sales performance across stores and time periods.
+- Build Power BI reporting views for sales trends and store-level comparison.
+- Use data modeling and DAX measures to support retail performance analysis.
+
+---
+
+## Tools & Technologies
+
+- Power BI
+- Excel
+- DAX
+- Data Modeling
+- Retail Analytics
+
+---
+
+## Project Workflow
+
 - Import CSV file into Power BI Desktop
 - Create Calendar Table, and Refresh Date Table
 - Create a relationship between Walmart Table and Calendar Table
 - Create conditional columns
 - Create Sorting Columns for the conditional Columns, and custom sort them
 - Create DAX measures
-- Adding Project Logos and Title for the Dashboard
-- Create Slider and Visual Cards for KPIs
-- Line and Stacked Column Visuals
-- Scatter Chart
-- Create KPI Indicators and Logos for visuals
-- Final Dashboard
-- Deployment
----
-
-## Tools & Technologies
-
-- Data Analytics
-- Power BI
-- Excel
-- Retail
-- Sales
 
 ---
 
 ## Key Insights
 
-- Completed workflow step: Expected Final Dashboard
-- Completed workflow step: Import CSV file into Power BI Desktop
-- Completed workflow step: Create Calendar Table, and Refresh Date Table
-- Completed workflow step: Create a relationship between Walmart Table and Calendar Table
-- Completed workflow step: Create conditional columns
+- Analyzed retail sales performance across multiple stores to identify sales trends and business patterns.
+- Built Power BI dashboard visuals to compare yearly sales, store activity, and operational performance.
+- Used Power BI modeling concepts such as date tables, relationships, conditional columns, and DAX measures.
+- Converted raw sales data into a structured business intelligence reporting solution.
 
 ---
 
-## Project Preview
+## Final Dashboard / Project Preview
 
-![Project Preview](https://app.colaberry.com/uploads/ProjectRequest/182/Walmart_es.gif)
+![Final Dashboard](https://app.colaberry.com/uploads/ProjectRequest/182/Walmart_es.gif)
 
 ---
 
-## Additional Resources
+## Business Impact
 
-- [Step-by-Step Instructions](#/network/960/projectsteps)
+- Helps retail teams compare store performance and identify sales trends.
+- Supports better planning around seasonal demand and store-level operations.
+- Turns historical sales data into a clear dashboard for business review.
 
+---
 
+## Files Included
+
+- README.md
+- project-data.json
 
 ---
 

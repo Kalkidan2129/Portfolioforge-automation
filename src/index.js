@@ -408,9 +408,196 @@ const normalizedTags = [...new Set(
     })
 )];
 
-const tagsList = normalizedTags.length > 0
-  ? normalizedTags.map(tag => `- ${tag}`).join('\n')
-  : 'No tags available';
+const tagsList = generateProfessionalTools(projectData)
+  .map(tool => `- ${tool}`)
+  .join('\n');
+
+  function detectProjectCategory(project) {
+  const text = `${project.title || ''} ${project.description || ''} ${(project.tags || []).join(' ')}`.toLowerCase();
+
+  if (/vodafone|telecom|telecommunications|subscriber|churn|network|arpu/.test(text)) {
+    return 'telecom';
+  }
+
+  if (/walmart|retail|store|sales|inventory/.test(text)) {
+    return 'retail';
+  }
+
+  if (/finance|revenue|profit|loss|forecast|budget/.test(text)) {
+    return 'finance';
+  }
+
+  if (/healthcare|patient|hospital|medical|clinical/.test(text)) {
+    return 'healthcare';
+  }
+
+  if (/machine learning|classification|prediction|model|ai/.test(text)) {
+    return 'machine_learning';
+  }
+
+  if (/sql|database|etl|warehouse|pipeline/.test(text)) {
+    return 'data_engineering';
+  }
+
+  if (/power bi|dashboard|visualization|dax|reporting/.test(text)) {
+    return 'business_intelligence';
+  }
+
+  return 'general_analytics';
+}
+
+  function generateProfessionalInsights(project) {
+  const title = (project.title || '').toLowerCase();
+  const description = (project.description || '').toLowerCase();
+  const tags = (project.tags || []).join(' ').toLowerCase();
+
+  const text = `${title} ${description} ${tags}`;
+
+  // Telecom / Vodafone Projects
+if (/vodafone|telecom|telecommunications|revenue|churn/.test(text)) {
+  return [
+    'Analyzed telecom revenue, subscriber, churn, and network performance metrics.',
+    'Built analytics dashboards to help stakeholders monitor KPI performance and revenue trends.',
+    'Prepared and transformed project data for forecasting and business analysis workflows.',
+    'Connected operational metrics to business-focused visual reporting for decision-making.'
+  ];
+}
+
+  // Retail / Walmart Projects
+if (/walmart|retail|sales/.test(text)) {
+  return [
+    'Analyzed retail sales performance across multiple stores to identify sales trends and business patterns.',
+    'Built Power BI dashboard visuals to compare yearly sales, store activity, and operational performance.',
+    'Used Power BI modeling concepts such as date tables, relationships, conditional columns, and DAX measures.',
+    'Converted raw sales data into a structured business intelligence reporting solution.'
+  ];
+}
+
+  // AI / Forecasting / ML Projects
+  if (/forecast|machine learning|ai/.test(text)) {
+    return [
+      'Prepared project data for forecasting and machine learning analysis workflows.',
+      'Identified patterns and trends that support predictive analytics and business planning.',
+      'Structured project outputs into clear analytics deliverables and reporting assets.',
+      'Presented findings in a recruiter-friendly portfolio format.'
+    ];
+  }
+
+  // Default Fallback
+  return [
+    'Analyzed project data to identify meaningful business and operational patterns.',
+    'Built structured analytics outputs to communicate findings clearly.',
+    'Transformed raw project work into a professional portfolio-ready case study.',
+    'Presented project results using business-focused reporting and visualization techniques.'
+  ];
+}
+
+function generateProjectSummaryText(project) {
+  const title = (project.title || '').toLowerCase();
+  const description = project.description || '';
+  const tags = (project.tags || []).join(' ').toLowerCase();
+  const text = `${title} ${description} ${tags}`;
+
+  if (/vodafone|telecom|telecommunications/.test(text)) {
+    return 'This project analyzes Vodafone Qatar performance data to support revenue forecasting, churn analysis, KPI monitoring, and business reporting.';
+  }
+
+  if (/walmart|retail/.test(text)) {
+    return 'This project analyzes Walmart store sales data using Power BI to identify sales trends, compare store performance, and support retail decision-making.';
+  }
+
+  return description || 'This project transforms raw project data into a structured analytics case study with clear insights, visuals, and business value.';
+}
+
+function generateBusinessProblem(project) {
+  const title = (project.title || '').toLowerCase();
+  const description = project.description || '';
+  const tags = (project.tags || []).join(' ').toLowerCase();
+  const text = `${title} ${description} ${tags}`;
+
+  if (/vodafone|telecom|telecommunications/.test(text)) {
+    return 'Telecom leaders need reliable visibility into revenue trends, churn behavior, subscriber activity, and network performance so they can make better forecasting and strategy decisions.';
+  }
+
+  if (/walmart|retail/.test(text)) {
+    return 'Retail teams need to understand sales trends, seasonal patterns, and store-level performance so they can improve planning, operations, and business decision-making.';
+  }
+
+  return 'Organizations need clear analytics outputs that transform raw project data into actionable insights for better decision-making.';
+}
+
+function generateProjectObjectives(project) {
+  const text = `${project.title || ''} ${project.description || ''} ${(project.tags || []).join(' ')}`.toLowerCase();
+
+  if (/vodafone|telecom|telecommunications/.test(text)) {
+    return [
+      'Analyze telecom revenue, churn, subscriber, and network performance trends.',
+      'Prepare data for forecasting and KPI-based business analysis.',
+      'Create a clear analytics story for finance and strategy decision-making.'
+    ];
+  }
+
+  if (/walmart|retail/.test(text)) {
+    return [
+      'Analyze Walmart sales performance across stores and time periods.',
+      'Build Power BI reporting views for sales trends and store-level comparison.',
+      'Use data modeling and DAX measures to support retail performance analysis.'
+    ];
+  }
+
+  return [
+    'Analyze project data to identify meaningful patterns.',
+    'Create a structured analytics deliverable for business users.',
+    'Present results in a recruiter-friendly portfolio format.'
+  ];
+}
+
+function generateBusinessImpact(project) {
+  const text = `${project.title || ''} ${project.description || ''} ${(project.tags || []).join(' ')}`.toLowerCase();
+
+  if (/vodafone|telecom|telecommunications/.test(text)) {
+    return [
+      'Improves visibility into telecom revenue, churn, and subscriber performance.',
+      'Supports forecasting and strategic planning for finance and leadership teams.',
+      'Helps decision-makers monitor business health through KPI-focused reporting.'
+    ];
+  }
+
+  if (/walmart|retail/.test(text)) {
+    return [
+      'Helps retail teams compare store performance and identify sales trends.',
+      'Supports better planning around seasonal demand and store-level operations.',
+      'Turns historical sales data into a clear dashboard for business review.'
+    ];
+  }
+
+  return [
+    'Improves visibility into project outcomes and business patterns.',
+    'Supports better decision-making through structured analysis and reporting.',
+    'Turns raw project work into a clear, professional analytics case study.'
+  ];
+}
+
+function generateProfessionalTools(project) {
+  const category = detectProjectCategory(project);
+
+  if (category === 'telecom') {
+    return ['Power BI', 'Python', 'Pandas', 'Microsoft Fabric', 'ETL', 'Data Forecasting'];
+  }
+
+  if (category === 'retail') {
+    return ['Power BI', 'Excel', 'DAX', 'Data Modeling', 'Retail Analytics'];
+  }
+
+  if (category === 'machine_learning') {
+    return ['Python', 'Pandas', 'Machine Learning', 'Forecasting', 'Data Analytics'];
+  }
+
+  return [...new Set((project.tags || [])
+    .map(tag => tag.trim())
+    .filter(tag => tag && !['Instructions', 'Case Study'].includes(tag))
+  )].slice(0, 6);
+}
 
 function generateProjectDetails(project) {
   const title = project.title || 'Untitled Project';
@@ -432,7 +619,7 @@ const cleanTags = [...new Set(
   const detailText = project.stepByStepContent || description;
 
   const problemMatch = detailText.match(
-  /Detailed Instructions:\s*Problem Statement\s*([\s\S]*?)(Objective|Insight:|$)/i
+  /Detailed Instructions:\s*[\r\n\s]*Problem Statement\s*([\s\S]*?)(?:\n\s*Objective|\n\s*Insight:|$)/i
 );
 
   const businessProblem = problemMatch
@@ -440,34 +627,30 @@ const cleanTags = [...new Set(
     : description;
 
   return {
-    overview: description,
-    businessProblem: businessProblem,
-  keyInsights: project.allStepDetails
-  .slice(0, 5)
-  .map(step => {
-    const match = step.content.match(/Step Name:\s*(.*)/i);
-
-    return match
-      ? `Completed workflow step: ${match[1].trim()}`
-      : null;
-  })
-  .filter(Boolean),
+    overview: generateProjectSummaryText(project),
+    businessProblem: generateBusinessProblem(project),
+  keyInsights: generateProfessionalInsights(project),
   };
 }
 
   const projectDetails = generateProjectDetails(projectData);
   const projectApproach = projectData.allStepDetails
   .map(step => {
-    const stepNameMatch = step.content.match(/Step Name:\s*(.*)/i);
-    return stepNameMatch ? `- ${stepNameMatch[1].trim()}` : null;
+    const match = step.content.match(/Step Name:\s*(.*)/i);
+    return match ? match[1].trim() : null;
   })
   .filter(Boolean)
+  .filter(stepName => !/expected final|final dashboard|deployment|case\s*\d+/i.test(stepName))
+  .slice(0, 6)
+  .map(stepName => `- ${stepName}`)
   .join('\n');
 
   const readmeContent = `
 # ${projectData.title}
 
-## Project Overview
+${projectData.imageUrl ? `![Project Preview](${projectData.imageUrl})` : ''}
+
+## Project Summary
 
 ${projectDetails.overview}
 
@@ -479,9 +662,10 @@ ${projectDetails.businessProblem}
 
 ---
 
-## Project Approach
+## Objective
 
-${projectApproach || 'Project approach details unavailable.'}
+${generateProjectObjectives(projectData).map(objective => `- ${objective}`).join('\n')}
+
 ---
 
 ## Tools & Technologies
@@ -490,23 +674,36 @@ ${tagsList}
 
 ---
 
+## Project Workflow
+
+${projectApproach || '- Collected and reviewed project data.\n- Cleaned and prepared the data for analysis.\n- Built visualizations to explore trends and patterns.\n- Summarized findings into business-focused insights.'}
+
+---
+
 ## Key Insights
 
-${projectDetails.keyInsights.map(insight => `- ${insight}`).join('\n')}
+${projectDetails.keyInsights.length > 0
+  ? projectDetails.keyInsights.map(insight => `- ${insight}`).join('\n')
+  : '- Identified important business patterns from the project data.\n- Created visual summaries to make the analysis easier to understand.\n- Organized the project into a clear portfolio-ready case study.'}
 
 ---
 
-## Project Preview
+## Final Dashboard / Project Preview
 
-${projectData.imageUrl ? `![Project Preview](${projectData.imageUrl})` : 'No image available.'}
+${projectData.imageUrl ? `![Final Dashboard](${projectData.imageUrl})` : 'No project preview image available.'}
 
 ---
 
-## Additional Resources
+## Business Impact
 
-${projectData.stepByStepLink ? `- [Step-by-Step Instructions](${projectData.stepByStepLink})` : ''}
+${generateBusinessImpact(projectData).map(item => `- ${item}`).join('\n')}
 
-${projectData.tasksLink ? `- [Project Tasks Board](${projectData.tasksLink})` : ''}
+---
+
+## Files Included
+
+- README.md
+- project-data.json
 
 ---
 
