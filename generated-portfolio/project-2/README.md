@@ -1,7 +1,7 @@
 
 # Walmart Store Sales
 
-![Project Preview](https://app.colaberry.com/uploads/ProjectRequest/182/Walmart_es.gif)
+![Project Preview](./screenshots/preview.png)
 
 ## Project Summary
 
@@ -35,12 +35,11 @@ Retail teams need to understand sales trends, seasonal patterns, and store-level
 
 ## Project Workflow
 
-- Import CSV file into Power BI Desktop
-- Create Calendar Table, and Refresh Date Table
-- Create a relationship between Walmart Table and Calendar Table
-- Create conditional columns
-- Create Sorting Columns for the conditional Columns, and custom sort them
-- Create DAX measures
+- Imported and prepared Walmart sales data in Power BI.
+- Built calendar tables and data relationships for time-based analysis.
+- Created DAX measures and calculated fields for sales performance reporting.
+- Designed dashboard visuals to compare store and yearly sales trends.
+- Summarized retail insights to support business decision-making.
 
 ---
 
@@ -55,7 +54,7 @@ Retail teams need to understand sales trends, seasonal patterns, and store-level
 
 ## Final Dashboard / Project Preview
 
-![Final Dashboard](https://app.colaberry.com/uploads/ProjectRequest/182/Walmart_es.gif)
+![Final Dashboard](./screenshots/preview.png)
 
 ---
 

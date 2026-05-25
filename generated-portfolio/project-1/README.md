@@ -1,7 +1,7 @@
 
 # Revenue Forecasting and Performance Analysis of Vodafone Qatar (2021–2023)
 
-![Project Preview](https://d2eiog5yno1qk7.cloudfront.net/StressTest_2.gif)
+![Project Preview](./screenshots/preview.png)
 
 ## Project Summary
 
@@ -36,12 +36,11 @@ Telecom leaders need reliable visibility into revenue trends, churn behavior, su
 
 ## Project Workflow
 
-- Problem Statement and Objective
-- Executive Summary and Background
-- Data Overview
-- Methodology
-- Visualization
-- Solution Impact
+- Defined the telecom forecasting and KPI monitoring objectives.
+- Reviewed Vodafone Qatar revenue, subscriber, churn, and network performance data.
+- Prepared and transformed project data for analytics and forecasting workflows.
+- Built Power BI dashboards to monitor telecom business performance trends.
+- Summarized findings into business-focused insights and reporting outputs.
 
 ---
 
@@ -56,7 +55,7 @@ Telecom leaders need reliable visibility into revenue trends, churn behavior, su
 
 ## Final Dashboard / Project Preview
 
-![Final Dashboard](https://d2eiog5yno1qk7.cloudfront.net/StressTest_2.gif)
+![Final Dashboard](./screenshots/preview.png)
 
 ---
 

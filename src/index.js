@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const readline = require('readline');
 const { chromium } = require('playwright');
 
@@ -22,6 +23,61 @@ function isValidUrl(url) {
 
 function isDuplicate(url) {
   return links.includes(url);
+}
+
+async function downloadImage(imageUrl, outputPath) {
+  if (!imageUrl) return null;
+
+  try {
+    const response = await fetch(imageUrl);
+
+    if (!response.ok) {
+      console.log(`Image download failed: ${imageUrl}`);
+      return null;
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    fs.writeFileSync(outputPath, buffer);
+
+    return outputPath;
+  } catch (error) {
+    console.log(`Image download error: ${error.message}`);
+    return null;
+  }
+}
+ 
+function detectProjectCategory(project) {
+  const text = `${project.title || ''} ${project.description || ''} ${(project.tags || []).join(' ')}`.toLowerCase();
+
+  if (/vodafone|telecom|telecommunications|subscriber|churn|network|arpu/.test(text)) {
+    return 'telecom';
+  }
+
+  if (/walmart|retail|store|sales|inventory/.test(text)) {
+    return 'retail';
+  }
+
+  if (/finance|revenue|profit|loss|forecast|budget/.test(text)) {
+    return 'finance';
+  }
+
+  if (/healthcare|patient|hospital|medical|clinical/.test(text)) {
+    return 'healthcare';
+  }
+
+  if (/machine learning|classification|prediction|model|ai/.test(text)) {
+    return 'machine_learning';
+  }
+
+  if (/sql|database|etl|warehouse|pipeline/.test(text)) {
+    return 'data_engineering';
+  }
+
+  if (/power bi|dashboard|visualization|dax|reporting/.test(text)) {
+    return 'business_intelligence';
+  }
+
+  return 'general_analytics';
 }
 
 function promptForLink() {
@@ -132,14 +188,38 @@ allProjectsData
 
 const excludedSkillKeys = new Set([
   'instructions',
-  'casestudy'
+  'casestudy',
+  'sales',
+  'reporting',
+  'finance',
+  'retail',
+  'telecommunications',
+  'dataanalytics',
+  'datascience'
 ]);
 
-const skills = [...skillMap.entries()]
+const preferredSkillOrder = [
+  'Power BI',
+  'Python',
+  'Pandas',
+  'Excel',
+  'DAX',
+  'SQL',
+  'ETL',
+  'Machine Learning',
+  'Microsoft Fabric',
+  'Data Forecasting'
+];
+
+const extractedSkills = [...skillMap.entries()]
   .filter(([key]) => !excludedSkillKeys.has(key))
-  .map(([, label]) => label)
-  .sort((a, b) => a.length - b.length)
-  .slice(0, 10);
+  .map(([, label]) => label);
+
+const skills = preferredSkillOrder.filter(skill =>
+  extractedSkills.some(extracted =>
+    normalizeSkillKey(extracted) === normalizeSkillKey(skill)
+  )
+).slice(0, 10);
 
 const colors = [
   'F2C811',
@@ -188,6 +268,24 @@ function generateProjectSummary(project) {
       .toLowerCase();
 
   return `${actionVerb} a data analytics project focused on ${focus}${toolsText ? ` using ${toolsText}` : ''} to uncover trends, support decision-making, and present business insights.`;
+}
+
+function generateHomepageProjectSummary(project) {
+  const category = detectProjectCategory(project);
+
+  if (category === 'telecom') {
+    return 'Telecom analytics project focused on revenue forecasting, churn analysis, KPI monitoring, and business reporting.';
+  }
+
+  if (category === 'retail') {
+    return 'Retail sales analytics project using Power BI to analyze store performance, sales trends, and business insights.';
+  }
+
+  if (category === 'machine_learning') {
+    return 'Machine learning analytics project focused on predictive modeling, forecasting, and business intelligence.';
+  }
+
+  return 'Data analytics project focused on transforming raw data into actionable business insights and reporting.';
 }
 
 function generatePortfolioAbout(projects) {
@@ -271,7 +369,7 @@ ${allProjectsData.map((project, index) => `
 
 ## ${index + 1}. ${project.title}
 
-${generateProjectSummary(project)}
+${generateHomepageProjectSummary(project)}
 
 <br><br>
 
@@ -412,39 +510,7 @@ const tagsList = generateProfessionalTools(projectData)
   .map(tool => `- ${tool}`)
   .join('\n');
 
-  function detectProjectCategory(project) {
-  const text = `${project.title || ''} ${project.description || ''} ${(project.tags || []).join(' ')}`.toLowerCase();
 
-  if (/vodafone|telecom|telecommunications|subscriber|churn|network|arpu/.test(text)) {
-    return 'telecom';
-  }
-
-  if (/walmart|retail|store|sales|inventory/.test(text)) {
-    return 'retail';
-  }
-
-  if (/finance|revenue|profit|loss|forecast|budget/.test(text)) {
-    return 'finance';
-  }
-
-  if (/healthcare|patient|hospital|medical|clinical/.test(text)) {
-    return 'healthcare';
-  }
-
-  if (/machine learning|classification|prediction|model|ai/.test(text)) {
-    return 'machine_learning';
-  }
-
-  if (/sql|database|etl|warehouse|pipeline/.test(text)) {
-    return 'data_engineering';
-  }
-
-  if (/power bi|dashboard|visualization|dax|reporting/.test(text)) {
-    return 'business_intelligence';
-  }
-
-  return 'general_analytics';
-}
 
   function generateProfessionalInsights(project) {
   const title = (project.title || '').toLowerCase();
@@ -599,6 +665,52 @@ function generateProfessionalTools(project) {
   )].slice(0, 6);
 }
 
+function generateProjectWorkflow(project) {
+  const category = detectProjectCategory(project);
+
+  // Telecom Projects
+  if (category === 'telecom') {
+    return [
+      'Defined the telecom forecasting and KPI monitoring objectives.',
+      'Reviewed Vodafone Qatar revenue, subscriber, churn, and network performance data.',
+      'Prepared and transformed project data for analytics and forecasting workflows.',
+      'Built Power BI dashboards to monitor telecom business performance trends.',
+      'Summarized findings into business-focused insights and reporting outputs.'
+    ];
+  }
+
+  // Retail Projects
+  if (category === 'retail') {
+    return [
+      'Imported and prepared Walmart sales data in Power BI.',
+      'Built calendar tables and data relationships for time-based analysis.',
+      'Created DAX measures and calculated fields for sales performance reporting.',
+      'Designed dashboard visuals to compare store and yearly sales trends.',
+      'Summarized retail insights to support business decision-making.'
+    ];
+  }
+
+  // Machine Learning Projects
+  if (category === 'machine_learning') {
+    return [
+      'Prepared and cleaned the dataset for machine learning analysis.',
+      'Explored data patterns and feature relationships.',
+      'Built predictive or analytical models using Python-based workflows.',
+      'Evaluated model performance and analytical outputs.',
+      'Documented findings and business recommendations.'
+    ];
+  }
+
+  // Default Fallback
+  return [
+    'Reviewed project requirements and available data sources.',
+    'Prepared and structured the data for analysis.',
+    'Built analytics visuals and reporting outputs.',
+    'Identified business patterns, trends, and insights.',
+    'Documented the project as a professional portfolio case study.'
+  ];
+}
+
 function generateProjectDetails(project) {
   const title = project.title || 'Untitled Project';
   const description = project.description || 'No project description available.';
@@ -676,7 +788,7 @@ ${tagsList}
 
 ## Project Workflow
 
-${projectApproach || '- Collected and reviewed project data.\n- Cleaned and prepared the data for analysis.\n- Built visualizations to explore trends and patterns.\n- Summarized findings into business-focused insights.'}
+${generateProjectWorkflow(projectData).map(step => `- ${step}`).join('\n')}
 
 ---
 
@@ -713,7 +825,16 @@ ${generateBusinessImpact(projectData).map(item => `- ${item}`).join('\n')}
 `;
 
   fs.mkdirSync(outputFolder, { recursive: true });
-  fs.writeFileSync(`${outputFolder}/README.md`, readmeContent);
+  fs.mkdirSync(`${outputFolder}/screenshots`, { recursive: true });
+  fs.mkdirSync(`${outputFolder}/files`, { recursive: true });
+
+  const localPreviewPath = `${outputFolder}/screenshots/preview.png`;
+  const savedPreviewImage = await downloadImage(projectData.imageUrl, localPreviewPath);
+  const readmeImagePath = savedPreviewImage ? './screenshots/preview.png' : projectData.imageUrl;
+
+  const finalReadmeContent = readmeContent.replaceAll(projectData.imageUrl, readmeImagePath);
+
+  fs.writeFileSync(`${outputFolder}/README.md`, finalReadmeContent);
   fs.writeFileSync(`${outputFolder}/project-data.json`, JSON.stringify(projectData, null, 2));
 
   console.log(`README saved to ${outputFolder}/README.md`);
