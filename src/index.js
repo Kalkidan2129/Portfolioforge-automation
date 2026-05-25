@@ -1,5 +1,7 @@
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const simpleGit = require('simple-git');
 const readline = require('readline');
 const { chromium } = require('playwright');
 
@@ -11,6 +13,101 @@ const allProjectsData = [];
 const links = [];
 const MAX_LINKS = 3;
 const MIN_LINKS = 1;
+
+console.log('GitHub config loaded:', {
+  username: process.env.GITHUB_USERNAME ? 'yes' : 'missing',
+  token: process.env.GITHUB_TOKEN ? 'yes' : 'missing',
+  repo: process.env.GITHUB_REPO_NAME || 'missing'
+});
+
+async function createGitHubRepo() {
+  const repoName = process.env.GITHUB_REPO_NAME;
+  const token = process.env.GITHUB_TOKEN;
+
+  if (!repoName || !token) {
+    console.log('Missing GitHub repo name or token.');
+    return;
+  }
+
+  try {
+    const response = await fetch('https://api.github.com/user/repos', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: repoName,
+        description: 'Automatically generated data analytics portfolio',
+        private: false,
+        auto_init: false
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.status === 201) {
+      console.log(`GitHub repo created: ${data.html_url}`);
+      return data;
+    }
+
+    if (response.status === 422) {
+      console.log(`GitHub repo already exists: ${repoName}`);
+      return data;
+    }
+
+    console.log('GitHub repo creation failed:', data.message);
+  } catch (error) {
+    console.log('GitHub repo creation error:', error.message);
+  }
+}
+
+async function pushGeneratedPortfolioToGitHub() {
+  const username = process.env.GITHUB_USERNAME;
+  const token = process.env.GITHUB_TOKEN;
+  const repoName = process.env.GITHUB_REPO_NAME;
+
+  const sourceFolder = path.resolve('generated-portfolio');
+  const publishFolder = path.resolve('../published-portfolio');
+
+  if (!username || !token || !repoName) {
+    console.log('Missing GitHub username, token, or repo name.');
+    return;
+  }
+
+  if (!fs.existsSync(sourceFolder)) {
+    console.log('generated-portfolio folder not found.');
+    return;
+  }
+
+  const repoUrl = `https://${username}:${token}@github.com/${username}/${repoName}.git`;
+
+  if (!fs.existsSync(publishFolder)) {
+    console.log('Cloning portfolio repository...');
+    await simpleGit().clone(repoUrl, publishFolder);
+  }
+
+  console.log('Copying generated portfolio files...');
+
+  const items = fs.readdirSync(publishFolder);
+
+  for (const item of items) {
+   if (item !== '.git') {
+    fs.rmSync(path.join(publishFolder, item), { recursive: true, force: true });
+  }
+  }
+
+  fs.cpSync(sourceFolder, publishFolder, { recursive: true });
+
+  const git = simpleGit(publishFolder);
+
+  await git.add('.');
+  await git.commit('Update generated portfolio');
+  await git.push('origin', 'main');
+
+  console.log(`Generated portfolio pushed to GitHub: https://github.com/${username}/${repoName}`);
+}
 
 function isValidUrl(url) {
   try {
@@ -94,6 +191,8 @@ function promptForLink() {
 
 async function run() {
   console.log("PortfolioForge AI started\n");
+
+  await createGitHubRepo();
   
   while (links.length < MAX_LINKS) {
     const input = await promptForLink();
@@ -385,7 +484,7 @@ ${generateHomepageProjectSummary(project)}
 
   fs.writeFileSync('generated-portfolio/README.md', mainReadmeContent);
   console.log('Main portfolio README saved to generated-portfolio/README.md');
-
+  await pushGeneratedPortfolioToGitHub();
   await page.waitForTimeout(300000);
   await browser.close();
   console.log("Browser workflow complete.");
