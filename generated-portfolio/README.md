@@ -1,4 +1,7 @@
-# AI & Data Analytics Portfolio
+# Hi, I'm Kalkidan Bezabeh 👋
+
+## Power BI Developer
+
 
 ## Skills & Tools
 
@@ -8,7 +11,7 @@
 
 ## About
 
-This portfolio highlights 2 data analytics and business intelligence projects, focusing on forecasting, telecommunications, retail intelligence, machine learning, business performance analysis. It demonstrates practical experience in transforming project work into clear, structured, and recruiter-friendly analytics stories.
+This portfolio showcases 2 data analytics and business intelligence projects focused on forecasting, telecommunications, retail analytics, machine learning, business performance analysis. It demonstrates practical experience in transforming raw project work into professional dashboards, analytics solutions, and business-focused reporting outputs.
 
 ---
 
@@ -64,3 +67,11 @@ Retail sales analytics project using Power BI to analyze store performance, sale
 
 <br>
 
+
+---
+
+## Contact
+
+
+ | [GitHub](https://github.com/kalkidan2129)
+ | [Email](mailto:kalkidankin@gmail.com)

@@ -11,6 +11,7 @@ const rl = readline.createInterface({
 });
 const allProjectsData = [];
 const links = [];
+const studentProfile = {};
 const MAX_LINKS = 3;
 const MIN_LINKS = 1;
 
@@ -173,8 +174,76 @@ function detectProjectCategory(project) {
   if (/power bi|dashboard|visualization|dax|reporting/.test(text)) {
     return 'business_intelligence';
   }
+  // Healthcare
+  if (/healthcare|patient|hospital|medical|clinical/.test(text)) {
+    return 'healthcare';
+  }
+
+  // SQL / Database
+  if (/sql|database|query|mysql|postgresql|etl|warehouse/.test(text)) {
+    return 'sql_analytics';
+  }
+
+  // Tableau
+  if (/tableau/.test(text)) {
+    return 'tableau';
+  }
+
+  // Data Engineering
+  if (/pipeline|data engineering|spark|hadoop|airflow/.test(text)) {
+    return 'data_engineering';
+  }
+
+  // Cloud
+  if (/aws|azure|gcp|cloud/.test(text)) {
+    return 'cloud';
+  }
+
+  // Excel Analytics
+  if (/excel|spreadsheet/.test(text)) {
+    return 'excel_analytics';
+  }
 
   return 'general_analytics';
+}
+
+function askQuestion(question) {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer.trim());
+    });
+  });
+}
+
+async function collectStudentProfile() {
+  console.log('\nStudent Profile Setup\n');
+
+  studentProfile.fullName = await askQuestion('Full name: ');
+  studentProfile.professionalTitle = await askQuestion('Professional title: ');
+  studentProfile.linkedinUrl = await askQuestion('LinkedIn URL: ');
+  studentProfile.email = await askQuestion('Email: ');
+  studentProfile.githubUsername = await askQuestion('GitHub username: ');
+  studentProfile.repoName = await askQuestion('Portfolio repo name: ');
+
+  if (studentProfile.repoName) {
+    process.env.GITHUB_REPO_NAME = studentProfile.repoName;
+  }
+
+  console.log('\nStudent profile collected.\n');
+}
+
+function formatTitleCase(text) {
+  if (!text) return '';
+
+  return text
+    .split(' ')
+    .map(word => {
+      if (word.toLowerCase() === 'bi') return 'BI';
+      if (word.toLowerCase() === 'sql') return 'SQL';
+      if (word.toLowerCase() === 'ai') return 'AI';
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
 }
 
 function promptForLink() {
@@ -191,6 +260,8 @@ function promptForLink() {
 
 async function run() {
   console.log("PortfolioForge AI started\n");
+
+  await collectStudentProfile();
 
   await createGitHubRepo();
   
@@ -380,45 +451,55 @@ function generateHomepageProjectSummary(project) {
     return 'Retail sales analytics project using Power BI to analyze store performance, sales trends, and business insights.';
   }
 
-  if (category === 'machine_learning') {
-    return 'Machine learning analytics project focused on predictive modeling, forecasting, and business intelligence.';
+  if (category === 'finance') {
+    return 'Financial analytics project focused on forecasting, KPI reporting, and business performance analysis.';
   }
 
-  return 'Data analytics project focused on transforming raw data into actionable business insights and reporting.';
+  if (category === 'healthcare') {
+    return 'Healthcare analytics project focused on operational reporting, patient insights, and performance monitoring.';
+  }
+
+  if (category === 'sql_analytics') {
+    return 'SQL and database analytics project focused on querying, reporting, ETL, and business intelligence workflows.';
+  }
+
+  if (category === 'tableau') {
+    return 'Tableau dashboard project focused on data visualization, KPI tracking, and business reporting.';
+  }
+
+  if (category === 'data_engineering') {
+    return 'Data engineering project focused on ETL pipelines, data transformation, and scalable analytics workflows.';
+  }
+
+  if (category === 'cloud') {
+    return 'Cloud analytics project focused on scalable reporting, automation, and cloud-based data workflows.';
+  }
+
+  if (category === 'excel_analytics') {
+    return 'Excel analytics project focused on reporting, business analysis, and operational insights.';
+  }
+
+  return 'Business intelligence and analytics project focused on reporting, dashboards, and data-driven decision-making.';
 }
 
 function generatePortfolioAbout(projects) {
   const projectCount = projects.length;
 
-  const allTags = [...new Set(
-    projects.flatMap(project => project.tags || [])
-  )];
+  const allTags = [...new Set(projects.flatMap(project => project.tags || []))];
 
   const focusKeywords = [];
 
-if (allTags.some(tag => /forecast/i.test(tag))) {
-  focusKeywords.push('forecasting');
-}
+  if (allTags.some(tag => /forecast/i.test(tag))) focusKeywords.push('forecasting');
+  if (allTags.some(tag => /telecommunications/i.test(tag))) focusKeywords.push('telecommunications');
+  if (allTags.some(tag => /retail/i.test(tag))) focusKeywords.push('retail analytics');
+  if (allTags.some(tag => /machine learning|ai/i.test(tag))) focusKeywords.push('machine learning');
+  if (allTags.some(tag => /finance/i.test(tag))) focusKeywords.push('business performance analysis');
 
-if (allTags.some(tag => /telecommunications/i.test(tag))) {
-  focusKeywords.push('telecommunications');
-}
+  const focusAreas = focusKeywords.length > 0
+    ? focusKeywords.join(', ')
+    : 'business intelligence and data analytics';
 
-if (allTags.some(tag => /retail/i.test(tag))) {
-  focusKeywords.push('retail intelligence');
-}
-
-if (allTags.some(tag => /machine learning|ai/i.test(tag))) {
-  focusKeywords.push('machine learning');
-}
-
-if (allTags.some(tag => /finance/i.test(tag))) {
-  focusKeywords.push('business performance analysis');
-}
-
-const focusAreas = focusKeywords.join(', ');
-
-  return `This portfolio highlights ${projectCount} data analytics and business intelligence project${projectCount > 1 ? 's' : ''}, focusing on ${focusAreas}. It demonstrates practical experience in transforming project work into clear, structured, and recruiter-friendly analytics stories.`;
+  return `This portfolio showcases ${projectCount} data analytics and business intelligence projects focused on ${focusAreas}. It demonstrates practical experience in transforming raw project work into professional dashboards, analytics solutions, and business-focused reporting outputs.`;
 }
 
 function generatePortfolioTitle(projects) {
@@ -439,7 +520,10 @@ function generatePortfolioTitle(projects) {
   return 'Data Analytics Portfolio';
 }
 
-  const mainReadmeContent = `# ${generatePortfolioTitle(allProjectsData)}
+  const mainReadmeContent = `# Hi, I'm ${studentProfile.fullName || 'a Data Professional'} 👋
+
+## ${formatTitleCase(studentProfile.professionalTitle) || generatePortfolioTitle(allProjectsData)}
+
 
 ## Skills & Tools
 
@@ -480,8 +564,16 @@ ${generateHomepageProjectSummary(project)}
 
 <br>
 `).join('\n')}
-`;
 
+---
+
+## Contact
+
+${studentProfile.linkedinUrl ? `[LinkedIn](${studentProfile.linkedinUrl})` : ''}
+${studentProfile.githubUsername ? ` | [GitHub](https://github.com/${studentProfile.githubUsername})` : ''}
+${studentProfile.email ? ` | [Email](mailto:${studentProfile.email})` : ''}
+`;
+ 
   fs.writeFileSync('generated-portfolio/README.md', mainReadmeContent);
   console.log('Main portfolio README saved to generated-portfolio/README.md');
   await pushGeneratedPortfolioToGitHub();
@@ -638,6 +730,24 @@ if (/walmart|retail|sales/.test(text)) {
   ];
 }
 
+if (/finance|revenue|profit|loss|forecast|budget/.test(text)) {
+  return [
+    'Analyzed financial performance trends to identify revenue, cost, or profitability patterns.',
+    'Built reporting outputs to support forecasting, budgeting, and KPI tracking.',
+    'Connected financial metrics to business-focused insights for decision-making.',
+    'Presented financial analysis in a clear portfolio-ready business intelligence format.'
+  ];
+}
+
+if (/healthcare|patient|hospital|medical|clinical/.test(text)) {
+  return [
+    'Analyzed healthcare operational and performance metrics to identify trends and reporting insights.',
+    'Built dashboards to support KPI monitoring and healthcare performance analysis.',
+    'Prepared healthcare datasets for analytics and business reporting workflows.',
+    'Connected operational healthcare metrics to business-focused decision-making insights.'
+  ];
+}
+
   // AI / Forecasting / ML Projects
   if (/forecast|machine learning|ai/.test(text)) {
     return [
@@ -647,6 +757,60 @@ if (/walmart|retail|sales/.test(text)) {
       'Presented findings in a recruiter-friendly portfolio format.'
     ];
   }
+
+  if (/sql|database|query|mysql|postgresql|etl|warehouse/.test(text)) {
+  return [
+    'Used SQL queries to extract and analyze structured business data.',
+    'Joined and transformed relational datasets to support reporting needs.',
+    'Identified patterns from database records for business decision-making.',
+    'Presented query-driven insights in a recruiter-friendly analytics format.'
+  ];
+  }
+  
+  if (/tableau/.test(text)) {
+  return [
+    'Built Tableau dashboards to communicate project trends and KPI performance.',
+    'Used interactive visualizations to support business analysis and reporting.',
+    'Designed dashboard views to make patterns easier for stakeholders to understand.',
+    'Presented Tableau-based findings in a recruiter-friendly analytics format.'
+  ];
+  }
+
+  if (/excel|spreadsheet|pivot table|worksheet/.test(text)) {
+  return [
+    'Used Excel-based analysis techniques to identify business trends and operational patterns.',
+    'Prepared spreadsheet data for reporting and business-focused insights.',
+    'Built structured reporting views using Excel calculations and summaries.',
+    'Presented Excel-driven analysis in a recruiter-friendly portfolio format.'
+  ];
+}
+
+if (/pipeline|etl|data engineering|spark|hadoop|airflow/.test(text)) {
+  return [
+    'Built data engineering workflows to prepare and transform datasets for analytics.',
+    'Used ETL and pipeline techniques to support scalable reporting processes.',
+    'Validated and structured transformed datasets for downstream analysis.',
+    'Presented engineering workflows in a recruiter-friendly portfolio format.'
+  ];
+  }
+
+  if (/aws|azure|gcp|cloud/.test(text)) {
+  return [
+    'Used cloud-based workflows to support scalable analytics and reporting.',
+    'Prepared cloud resources or data outputs for business intelligence use cases.',
+    'Connected cloud automation concepts to practical analytics delivery.',
+    'Presented cloud analytics work in a recruiter-friendly portfolio format.'
+  ];
+  }
+
+  if (/machine learning|ml|ai|prediction|forecast|classification|regression/.test(text)) {
+  return [
+    'Prepared and transformed datasets for machine learning and predictive analytics workflows.',
+    'Built AI or forecasting models to identify trends, classifications, or predictive outcomes.',
+    'Connected machine learning outputs to business-focused reporting and analysis.',
+    'Presented AI-driven insights in a recruiter-friendly portfolio format.'
+  ];
+}
 
   // Default Fallback
   return [
@@ -710,6 +874,70 @@ function generateProjectObjectives(project) {
     ];
   }
 
+  if (detectProjectCategory(project) === 'finance') {
+  return [
+    'Analyze financial performance trends, revenue patterns, and business KPIs.',
+    'Build reporting views to support forecasting, budgeting, and performance analysis.',
+    'Present financial insights in a clear portfolio-ready business intelligence format.'
+  ];
+  }
+  
+  if (detectProjectCategory(project) === 'healthcare') {
+  return [
+    'Analyze healthcare operational and performance data to identify trends and insights.',
+    'Build reporting dashboards to support healthcare monitoring and decision-making.',
+    'Present healthcare analytics findings in a professional business intelligence format.'
+  ];
+  }
+  
+  if (detectProjectCategory(project) === 'sql_analytics') {
+  return [
+    'Analyze database records using SQL queries to identify trends and patterns.',
+    'Build structured reporting outputs from relational data sources.',
+    'Present query-based insights in a clear portfolio-ready analytics format.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'tableau') {
+  return [
+    'Analyze project data using Tableau dashboards and visual reporting techniques.',
+    'Build interactive visualizations to communicate trends, KPIs, and business patterns.',
+    'Present Tableau-based insights in a professional portfolio-ready format.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'excel_analytics') {
+  return [
+    'Analyze business data using Excel-based reporting and spreadsheet techniques.',
+    'Build structured reporting outputs to identify trends and operational insights.',
+    'Present Excel-driven analysis in a professional portfolio-ready format.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'data_engineering') {
+  return [
+    'Build and analyze scalable data workflows for transformation and reporting.',
+    'Prepare and process structured datasets using ETL and pipeline techniques.',
+    'Present data engineering workflows in a professional portfolio-ready format.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'cloud') {
+  return [
+    'Analyze cloud-based data workflows and reporting requirements.',
+    'Use cloud platforms to support scalable analytics, storage, or automation workflows.',
+    'Present cloud analytics work in a professional portfolio-ready format.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'machine_learning') {
+  return [
+    'Analyze datasets and build machine learning workflows to identify predictive patterns.',
+    'Prepare and transform data for model training, evaluation, and forecasting tasks.',
+    'Present AI and machine learning insights in a professional portfolio-ready format.'
+  ];
+}
+
   return [
     'Analyze project data to identify meaningful patterns.',
     'Create a structured analytics deliverable for business users.',
@@ -735,6 +963,70 @@ function generateBusinessImpact(project) {
       'Turns historical sales data into a clear dashboard for business review.'
     ];
   }
+  
+  if (detectProjectCategory(project) === 'finance') {
+  return [
+    'Supports financial planning and KPI-based business performance monitoring.',
+    'Improves visibility into revenue, profitability, and forecasting trends.',
+    'Helps stakeholders make more informed budgeting and strategic decisions.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'healthcare') {
+  return [
+    'Supports healthcare performance monitoring and operational reporting.',
+    'Improves visibility into healthcare KPIs and business performance trends.',
+    'Helps stakeholders make more informed operational and reporting decisions.'
+  ];
+  }
+  
+  if (detectProjectCategory(project) === 'sql_analytics') {
+  return [
+    'Improves access to structured business data through SQL-based analysis.',
+    'Supports reporting and decision-making using clean query outputs.',
+    'Demonstrates practical database querying and analytics skills.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'tableau') {
+  return [
+    'Improves business visibility through interactive Tableau dashboards.',
+    'Helps stakeholders understand performance trends and KPI patterns.',
+    'Demonstrates practical dashboard design and visual analytics skills.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'excel_analytics') {
+  return [
+    'Supports business reporting and operational analysis using spreadsheet workflows.',
+    'Improves visibility into trends and business performance metrics.',
+    'Demonstrates practical Excel analytics and reporting skills.'
+  ];
+  }
+  
+  if (detectProjectCategory(project) === 'data_engineering') {
+  return [
+    'Improves scalability and reliability of analytics data workflows.',
+    'Supports cleaner and more efficient reporting processes through ETL automation.',
+    'Demonstrates practical data engineering and pipeline development skills.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'cloud') {
+  return [
+    'Supports scalable analytics and reporting through cloud-based workflows.',
+    'Improves reliability and accessibility of data-driven business outputs.',
+    'Demonstrates practical cloud analytics and automation skills.'
+  ];
+  }
+
+  if (detectProjectCategory(project) === 'machine_learning') {
+  return [
+    'Supports predictive analytics and data-driven forecasting workflows.',
+    'Improves business visibility through AI-driven trend and pattern analysis.',
+    'Demonstrates practical machine learning and predictive analytics skills.'
+  ];
+  }
 
   return [
     'Improves visibility into project outcomes and business patterns.',
@@ -757,6 +1049,33 @@ function generateProfessionalTools(project) {
   if (category === 'machine_learning') {
     return ['Python', 'Pandas', 'Machine Learning', 'Forecasting', 'Data Analytics'];
   }
+  if (category === 'finance') {
+  return ['Power BI', 'Excel', 'Financial Analysis', 'Forecasting', 'Business Intelligence'];
+  }
+
+  if (category === 'healthcare') {
+  return ['Power BI', 'Excel', 'Healthcare Analytics', 'Data Visualization', 'Reporting'];
+  }
+
+  if (category === 'sql_analytics') {
+  return ['SQL', 'Database Analysis', 'ETL', 'Data Modeling', 'Reporting'];
+  }
+
+  if (category === 'tableau') {
+  return ['Tableau', 'Data Visualization', 'Dashboard Design', 'Business Intelligence'];
+  }
+
+  if (category === 'data_engineering') {
+  return ['Python', 'SQL', 'ETL', 'Data Pipelines', 'Data Warehousing'];
+  }
+
+  if (category === 'cloud') {
+  return ['Cloud Platforms', 'Data Engineering', 'ETL', 'Analytics', 'Automation'];
+  }
+
+  if (category === 'excel_analytics') {
+  return ['Excel', 'Pivot Tables', 'Data Cleaning', 'Reporting', 'Business Analysis'];
+}
 
   return [...new Set((project.tags || [])
     .map(tag => tag.trim())
@@ -788,6 +1107,26 @@ function generateProjectWorkflow(project) {
       'Summarized retail insights to support business decision-making.'
     ];
   }
+  
+  if (category === 'finance') {
+   return [
+      'Reviewed financial performance data and key business metrics.',
+      'Prepared revenue, cost, profit, or forecasting data for analysis.',
+      'Built reporting views to monitor financial trends and KPI performance.',
+      'Analyzed patterns that support forecasting, budgeting, and business planning.',
+      'Summarized financial insights into decision-ready reporting outputs.'
+    ];
+  }
+
+  if (category === 'healthcare') {
+  return [
+    'Reviewed healthcare operational and performance datasets.',
+    'Prepared healthcare data for reporting and analytics workflows.',
+    'Built dashboards and visual reporting views for KPI monitoring.',
+    'Analyzed healthcare trends and operational patterns.',
+    'Summarized findings into business-focused healthcare insights.'
+  ];
+  }
 
   // Machine Learning Projects
   if (category === 'machine_learning') {
@@ -799,6 +1138,66 @@ function generateProjectWorkflow(project) {
       'Documented findings and business recommendations.'
     ];
   }
+
+  if (category === 'sql_analytics') {
+  return [
+    'Reviewed database tables, fields, and project requirements.',
+    'Wrote SQL queries to extract and filter relevant records.',
+    'Joined and transformed relational data for analysis.',
+    'Created reporting outputs to summarize key business patterns.',
+    'Documented SQL-based findings in a professional portfolio format.'
+  ];
+  }
+
+  if (category === 'tableau') {
+  return [
+    'Reviewed project data and business reporting requirements.',
+    'Prepared the dataset for Tableau visualization and analysis.',
+    'Built interactive dashboards to highlight trends, KPIs, and comparisons.',
+    'Refined dashboard layout for clear business storytelling.',
+    'Summarized Tableau insights into a professional portfolio case study.'
+  ];
+  }
+
+  if (category === 'excel_analytics') {
+  return [
+    'Reviewed and prepared spreadsheet data for analysis.',
+    'Cleaned and organized business records using Excel functions and formatting.',
+    'Created calculations, summaries, and reporting views for business insights.',
+    'Analyzed trends and operational patterns using spreadsheet techniques.',
+    'Presented findings in a professional analytics portfolio format.'
+  ];
+}
+
+if (category === 'data_engineering') {
+  return [
+    'Reviewed source datasets and data pipeline requirements.',
+    'Prepared and transformed data using ETL and engineering workflows.',
+    'Built structured pipelines for scalable analytics processing.',
+    'Validated transformed data outputs for reporting and downstream analysis.',
+    'Documented engineering workflows and project insights in a professional format.'
+  ];
+  }
+
+  if (category === 'cloud') {
+  return [
+    'Reviewed cloud project requirements and data workflow objectives.',
+    'Prepared cloud-based resources or datasets for analytics processing.',
+    'Built or configured cloud workflows to support reporting and automation.',
+    'Validated outputs for scalability, reliability, and business usability.',
+    'Documented cloud analytics results in a professional portfolio format.'
+  ];
+  }
+
+  if (category === 'machine_learning') {
+  return [
+    'Reviewed datasets and defined machine learning objectives.',
+    'Prepared and transformed data for model development workflows.',
+    'Built machine learning or forecasting models to analyze predictive patterns.',
+    'Evaluated model outputs and reporting insights for business interpretation.',
+    'Documented AI and machine learning findings in a professional portfolio format.'
+  ];
+}
 
   // Default Fallback
   return [
