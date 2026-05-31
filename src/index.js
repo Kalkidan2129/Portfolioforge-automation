@@ -4,7 +4,16 @@ const path = require('path');
 const simpleGit = require('simple-git');
 const readline = require('readline');
 const { chromium } = require('playwright');
+const OpenAI = require('openai');
 
+const openai = new OpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    'HTTP-Referer': 'http://localhost',
+    'X-OpenRouter-Title': 'PortfolioForge AI'
+  }
+});
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -107,9 +116,10 @@ async function pushGeneratedPortfolioToGitHub() {
   await git.commit('Update generated portfolio');
   await git.push('origin', 'main');
 
-  console.log(`Generated portfolio pushed to GitHub: https://github.com/${username}/${repoName}`);
+  console.log('\nPortfolio generated successfully!');
+  console.log(`View your portfolio here: https://github.com/${username}/${repoName}`);
+  console.log('Share this GitHub link with recruiters or add it to your resume/LinkedIn.\n');
 }
-
 function isValidUrl(url) {
   try {
     const parsed = new URL(url);
@@ -216,20 +226,42 @@ function askQuestion(question) {
 }
 
 async function collectStudentProfile() {
-  console.log('\nStudent Profile Setup\n');
-
-  studentProfile.fullName = await askQuestion('Full name: ');
-  studentProfile.professionalTitle = await askQuestion('Professional title: ');
-  studentProfile.linkedinUrl = await askQuestion('LinkedIn URL: ');
-  studentProfile.email = await askQuestion('Email: ');
-  studentProfile.githubUsername = await askQuestion('GitHub username: ');
-  studentProfile.repoName = await askQuestion('Portfolio repo name: ');
+  if (fs.existsSync('student-profile.json')) {
+  const savedProfile = JSON.parse(fs.readFileSync('student-profile.json', 'utf-8'));
+  Object.assign(studentProfile, savedProfile);
 
   if (studentProfile.repoName) {
     process.env.GITHUB_REPO_NAME = studentProfile.repoName;
   }
 
-  console.log('\nStudent profile collected.\n');
+  console.log('\nLoaded saved student profile.');
+  console.log(`Student: ${studentProfile.fullName}`);
+  console.log(`Portfolio repo: ${studentProfile.repoName}\n`);
+  return;
+  }
+
+  console.log('\nStudent Profile Setup');
+  console.log('This information will be used to personalize the GitHub portfolio.\n');
+
+  studentProfile.fullName = await askQuestion('Full name: ');
+  studentProfile.professionalTitle = await askQuestion('Professional title/headline: ');
+  studentProfile.linkedinUrl = await askQuestion('LinkedIn URL (optional): ');
+  studentProfile.email = await askQuestion('Email (optional): ');
+  studentProfile.githubUsername = await askQuestion('GitHub username: ');
+  studentProfile.repoName = await askQuestion('Portfolio repository name: ');
+
+  if (!studentProfile.repoName) {
+    studentProfile.repoName = 'data-analytics-portfolio';
+  }
+
+  process.env.GITHUB_REPO_NAME = studentProfile.repoName;
+  
+  fs.writeFileSync(
+    'student-profile.json',
+    JSON.stringify(studentProfile, null, 2)
+  );
+  console.log('\nStudent profile collected successfully.');
+  console.log(`Portfolio repo: ${studentProfile.repoName}\n`);
 }
 
 function formatTitleCase(text) {
@@ -368,28 +400,13 @@ const excludedSkillKeys = new Set([
   'datascience'
 ]);
 
-const preferredSkillOrder = [
-  'Power BI',
-  'Python',
-  'Pandas',
-  'Excel',
-  'DAX',
-  'SQL',
-  'ETL',
-  'Machine Learning',
-  'Microsoft Fabric',
-  'Data Forecasting'
-];
-
 const extractedSkills = [...skillMap.entries()]
   .filter(([key]) => !excludedSkillKeys.has(key))
   .map(([, label]) => label);
 
-const skills = preferredSkillOrder.filter(skill =>
-  extractedSkills.some(extracted =>
-    normalizeSkillKey(extracted) === normalizeSkillKey(skill)
-  )
-).slice(0, 10);
+const skills = extractedSkills
+  .filter(skill => skill && skill.length <= 30)
+  .slice(0, 10);
 
 const colors = [
   'F2C811',
@@ -407,38 +424,6 @@ const skillsBadges = skills.map((skill, index) => {
 
   return `<img src="https://img.shields.io/badge/${encodeURIComponent(skill)}-${color}?style=for-the-badge&logoColor=white" alt="${skill}">`;
 }).join(' ');
-
-function generateProjectSummary(project) {
-  const title = project.title || 'data analytics project';
-  const description = project.description || '';
-  const tags = project.tags || [];
-
-  const cleanTags = [...new Set(
-    tags
-      .map(tag => tag.trim())
-      .filter(tag => tag && !['Instructions', 'Case Study'].includes(tag))
-      .map(tag => {
-        if (/power\s*bi|powerbi/i.test(tag)) return 'Power BI';
-        if (/python\s*-\s*pandas/i.test(tag)) return 'Pandas';
-        return tag;
-      })
-  )];
-
-  const toolsText = cleanTags.slice(0, 4).join(', ');
-
-  const actionVerb =
-    /dashboard|power bi|report/i.test(description + title) ? 'Built' :
-    /forecast|predict|machine learning|ai/i.test(description + title) ? 'Developed' :
-    /sales|revenue|performance/i.test(description + title) ? 'Analyzed' :
-    'Created';
-
-  const focus =
-    title
-      .replace(/\s*\([^)]*\)/g, '')
-      .toLowerCase();
-
-  return `${actionVerb} a data analytics project focused on ${focus}${toolsText ? ` using ${toolsText}` : ''} to uncover trends, support decision-making, and present business insights.`;
-}
 
 function generateHomepageProjectSummary(project) {
   const category = detectProjectCategory(project);
@@ -482,6 +467,125 @@ function generateHomepageProjectSummary(project) {
   return 'Business intelligence and analytics project focused on reporting, dashboards, and data-driven decision-making.';
 }
 
+async function generateAIProjectCardSummary(project) {
+  if (!process.env.OPENROUTER_API_KEY) {
+    return generateHomepageProjectSummary(project);
+  }
+
+  try {
+    const prompt = `
+Create a GitHub portfolio project card summary.
+
+Requirements:
+- EXACTLY 2 short sentences
+- Maximum 45 words total
+- Professional and recruiter-friendly
+- Business focused
+- Mention the main tool only if clearly present
+- Do not use bullet points
+- Do not invent results or metrics
+- Return ONLY the summary text
+
+Project Data:
+${JSON.stringify(project, null, 2)}
+`;
+
+    const response = await openai.chat.completions.create({
+      model: 'openrouter/free',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.2
+    });
+
+    const rawSummary = response.choices[0].message.content.trim();
+
+    const cleanedSummary = rawSummary
+      .replace(/^["']|["']$/g, '')
+      .replace(/[\r\n]+/g, ' ')
+      .trim();
+
+    const sentences = cleanedSummary
+      .split(/(?<=[.!?])\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+
+    return sentences.join(' ');
+
+  } catch (error) {
+    return generateHomepageProjectSummary(project);
+  }
+}
+
+async function generateAIHomepageAbout(projects) {
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.log('OPENROUTER_API_KEY missing. Using fallback homepage about.');
+    return null;
+  }
+
+  const safeProjects = projects.map(project => ({
+    title: project.title,
+    description: project.description,
+    tags: project.tags,
+    category: detectProjectCategory(project)
+  }));
+
+const prompt = `
+You are writing the About Me section for a GitHub data analytics portfolio.
+
+Use the project data only to understand the person's skills, tools, project themes, and analytics focus areas.
+
+Write as the portfolio owner using first person "I".
+
+Do NOT:
+- mention specific project names
+- say "For Vodafone" or "For Walmart"
+- list projects one by one
+- invent jobs, degrees, certifications, years of experience, or employment history
+- make unsupported claims
+
+Focus on:
+- who the person is professionally
+- tools and skills demonstrated
+- ability to transform raw data into insights
+- dashboarding, reporting, business intelligence, and decision-making
+- industries/themes only if useful
+
+Write one polished paragraph, 3 sentences maximum.
+
+Tone:
+- professional
+- confident
+- recruiter-friendly
+- beginner-to-intermediate data analyst appropriate
+
+Project data:
+${JSON.stringify(safeProjects, null, 2)}
+`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'openrouter/free',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.4
+    });
+
+    return response.choices[0].message.content.trim();
+  } catch (error) {
+    console.log('AI homepage about generation failed. Using fallback about.');
+    console.log(error.message);
+    return null;
+  }
+}
+
 function generatePortfolioAbout(projects) {
   const projectCount = projects.length;
 
@@ -520,6 +624,13 @@ function generatePortfolioTitle(projects) {
   return 'Data Analytics Portfolio';
 }
 
+  const aiHomepageAbout = await generateAIHomepageAbout(allProjectsData);
+  const homepageAbout = aiHomepageAbout || generatePortfolioAbout(allProjectsData);
+
+  const homepageCardSummaries = await Promise.all(
+    allProjectsData.map(project => generateAIProjectCardSummary(project))
+  );
+
   const mainReadmeContent = `# Hi, I'm ${studentProfile.fullName || 'a Data Professional'} 👋
 
 ## ${formatTitleCase(studentProfile.professionalTitle) || generatePortfolioTitle(allProjectsData)}
@@ -533,7 +644,7 @@ ${skillsBadges}
 
 ## About
 
-${generatePortfolioAbout(allProjectsData)}
+${homepageAbout}
 
 ---
 
@@ -552,7 +663,7 @@ ${allProjectsData.map((project, index) => `
 
 ## ${index + 1}. ${project.title}
 
-${generateHomepageProjectSummary(project)}
+${homepageCardSummaries[index] || generateHomepageProjectSummary(project)}
 
 <br><br>
 
@@ -569,9 +680,19 @@ ${generateHomepageProjectSummary(project)}
 
 ## Contact
 
-${studentProfile.linkedinUrl ? `[LinkedIn](${studentProfile.linkedinUrl})` : ''}
-${studentProfile.githubUsername ? ` | [GitHub](https://github.com/${studentProfile.githubUsername})` : ''}
-${studentProfile.email ? ` | [Email](mailto:${studentProfile.email})` : ''}
+${[
+  studentProfile.linkedinUrl
+    ? `<a href="${studentProfile.linkedinUrl}"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"></a>`
+    : null,
+
+  studentProfile.githubUsername
+    ? `<a href="https://github.com/${studentProfile.githubUsername}"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"></a>`
+    : null,
+
+  studentProfile.email
+    ? `<a href="mailto:${studentProfile.email}"><img src="https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white"></a>`
+    : null
+].filter(Boolean).join(' ')}
 `;
  
   fs.writeFileSync('generated-portfolio/README.md', mainReadmeContent);
@@ -683,25 +804,6 @@ stepContent = stepContent
   allProjectsData.push(projectData);
   console.log('\n--- Extracted Project Data ---');
   console.log(JSON.stringify(projectData, null, 2));
-
-  const excludedTags = ['Instructions', 'Case Study'];
-
-const normalizedTags = [...new Set(
-  projectData.tags
-    .map(tag => tag.trim())
-    .filter(tag => tag && !excludedTags.includes(tag))
-    .map(tag => {
-      if (/power\s*bi/i.test(tag)) return 'Power BI';
-      if (/python\s*-\s*pandas/i.test(tag)) return 'Pandas';
-      return tag;
-    })
-)];
-
-const tagsList = generateProfessionalTools(projectData)
-  .map(tool => `- ${tool}`)
-  .join('\n');
-
-
 
   function generateProfessionalInsights(project) {
   const title = (project.title || '').toLowerCase();
@@ -1209,92 +1311,176 @@ if (category === 'data_engineering') {
   ];
 }
 
-function generateProjectDetails(project) {
-  const title = project.title || 'Untitled Project';
-  const description = project.description || 'No project description available.';
-  const tags = project.tags || [];
-
-  const excludedTags = ['Instructions', 'Case Study'];
-
-const cleanTags = [...new Set(
-  tags
-    .map(tag => tag.trim())
-    .filter(tag => tag && !excludedTags.includes(tag))
-)];
-
-  const toolsText = cleanTags
-   .slice(0, 5)
-   .join(', ') || 'data analytics tools';
-  
-  const detailText = project.stepByStepContent || description;
-
-  const problemMatch = detailText.match(
-  /Detailed Instructions:\s*[\r\n\s]*Problem Statement\s*([\s\S]*?)(?:\n\s*Objective|\n\s*Insight:|$)/i
-);
-
-  const businessProblem = problemMatch
-    ? problemMatch[1].trim()
-    : description;
+function normalizeAIProjectContent(content) {
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return [value];
+    return [];
+  };
 
   return {
-    overview: generateProjectSummaryText(project),
-    businessProblem: generateBusinessProblem(project),
-  keyInsights: generateProfessionalInsights(project),
+    summary: content.summary || '',
+    businessProblem: content.businessProblem || '',
+    objectives: toArray(content.objectives),
+    tools: toArray(content.tools),
+    workflow: toArray(content.workflow),
+    keyInsights: toArray(content.keyInsights),
+    businessImpact: toArray(content.businessImpact)
   };
 }
 
-  const projectDetails = generateProjectDetails(projectData);
-  const projectApproach = projectData.allStepDetails
-  .map(step => {
-    const match = step.content.match(/Step Name:\s*(.*)/i);
-    return match ? match[1].trim() : null;
-  })
-  .filter(Boolean)
-  .filter(stepName => !/expected final|final dashboard|deployment|case\s*\d+/i.test(stepName))
-  .slice(0, 6)
-  .map(stepName => `- ${stepName}`)
-  .join('\n');
+async function generateAIProjectContent(project) {
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.log('OPENROUTER_API_KEY missing. Using fallback content.');
+    return null;
+  }
+
+  const safeProjectData = {
+    title: project.title,
+    description: project.description,
+    tags: project.tags,
+    stepByStepContent: (project.stepByStepContent || '').slice(0, 6000),
+    steps: (project.allStepDetails || []).slice(0, 8).map(step => ({
+      stepNumber: step.stepNumber,
+      content: (step.content || '').slice(0, 1200)
+    }))
+  };
+
+  const prompt = `
+You are generating a professional GitHub portfolio project page from scraped Colaberry project data.
+
+Use ONLY the provided project data. Do not invent metrics, results, tools, or outcomes that are not supported by the data.
+
+Return strict JSON only with this exact shape:
+{
+  "summary": "2-3 sentence professional project summary",
+  "businessProblem": "2-3 sentence business problem",
+  "objectives": ["3 concise bullets"],
+  "tools": ["5-8 relevant tools/technologies"],
+  "workflow": ["5 concise professional workflow steps"],
+  "keyInsights": ["4 realistic insights based on the project data"],
+  "businessImpact": ["3 concise business impact bullets"]
+}
+
+Project data:
+${JSON.stringify(safeProjectData, null, 2)}
+`;
+
+  try {
+    const response = await openai.chat.completions.create({
+     model: 'openrouter/free',
+     messages: [
+       {
+         role: 'user',
+         content: prompt
+       }
+     ],
+     temperature: 0.3
+   });
+
+   const rawContent = response.choices[0].message.content.trim();
+
+   const jsonStart = rawContent.indexOf('{');
+   let braceCount = 0;
+   let jsonEnd = -1;
+
+  for (let i = jsonStart; i < rawContent.length; i++) {
+    if (rawContent[i] === '{') braceCount++;
+    if (rawContent[i] === '}') braceCount--;
+
+    if (braceCount === 0) {
+      jsonEnd = i;
+      break;
+    }
+  }
+
+   if (jsonStart === -1 || jsonEnd === -1) {
+     throw new Error('AI response did not contain valid JSON.');
+   }
+
+   const jsonText = rawContent.slice(jsonStart, jsonEnd + 1);
+
+   return normalizeAIProjectContent(JSON.parse(jsonText));
+  } catch (error) {
+    console.log('AI content generation failed. Using fallback content.');
+    console.log(error.message);
+    return null;
+  }
+}
+
+async function buildProjectPortfolioContent(project) {
+  const aiContent = await generateAIProjectContent(project);
+
+  if (aiContent) {
+    return {
+      title: project.title,
+      category: detectProjectCategory(project),
+      generationSource: 'ai',
+      summary: aiContent.summary,
+      businessProblem: aiContent.businessProblem,
+      objectives: aiContent.objectives,
+      tools: aiContent.tools,
+      workflow: aiContent.workflow,
+      keyInsights: aiContent.keyInsights,
+      businessImpact: aiContent.businessImpact,
+      imageUrl: project.imageUrl
+    };
+  }
+
+  return {
+    title: project.title,
+    category: detectProjectCategory(project),
+    generationSource: 'fallback',
+    summary: generateProjectSummaryText(project),
+    businessProblem: generateBusinessProblem(project),
+    objectives: generateProjectObjectives(project),
+    tools: generateProfessionalTools(project),
+    workflow: generateProjectWorkflow(project),
+    keyInsights: generateProfessionalInsights(project),
+    businessImpact: generateBusinessImpact(project),
+    imageUrl: project.imageUrl
+  };
+}
+
+  const portfolioContent = await buildProjectPortfolioContent(projectData);
+  
 
   const readmeContent = `
 # ${projectData.title}
 
-${projectData.imageUrl ? `![Project Preview](${projectData.imageUrl})` : ''}
-
 ## Project Summary
 
-${projectDetails.overview}
+${portfolioContent.summary}
 
 ---
 
 ## Business Problem
 
-${projectDetails.businessProblem}
+${portfolioContent.businessProblem}
 
 ---
 
 ## Objective
 
-${generateProjectObjectives(projectData).map(objective => `- ${objective}`).join('\n')}
+${portfolioContent.objectives.map(objective => `- ${objective}`).join('\n')}
 
 ---
 
 ## Tools & Technologies
 
-${tagsList}
+${portfolioContent.tools.map(tool => `- ${tool}`).join('\n')}
 
 ---
 
 ## Project Workflow
 
-${generateProjectWorkflow(projectData).map(step => `- ${step}`).join('\n')}
+${portfolioContent.workflow.map(step => `- ${step}`).join('\n')}
 
 ---
 
 ## Key Insights
 
-${projectDetails.keyInsights.length > 0
-  ? projectDetails.keyInsights.map(insight => `- ${insight}`).join('\n')
-  : '- Identified important business patterns from the project data.\n- Created visual summaries to make the analysis easier to understand.\n- Organized the project into a clear portfolio-ready case study.'}
+${portfolioContent.keyInsights.map(insight => `- ${insight}`).join('\n')}
 
 ---
 
@@ -1306,14 +1492,7 @@ ${projectData.imageUrl ? `![Final Dashboard](${projectData.imageUrl})` : 'No pro
 
 ## Business Impact
 
-${generateBusinessImpact(projectData).map(item => `- ${item}`).join('\n')}
-
----
-
-## Files Included
-
-- README.md
-- project-data.json
+${portfolioContent.businessImpact.map(item => `- ${item}`).join('\n')}
 
 ---
 

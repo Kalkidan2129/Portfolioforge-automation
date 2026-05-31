@@ -5,13 +5,13 @@
 
 ## Skills & Tools
 
-<img src="https://img.shields.io/badge/Power%20BI-F2C811?style=for-the-badge&logoColor=white" alt="Power BI"> <img src="https://img.shields.io/badge/Python-025E8C?style=for-the-badge&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/Pandas-3776AB?style=for-the-badge&logoColor=white" alt="Pandas"> <img src="https://img.shields.io/badge/Excel-217346?style=for-the-badge&logoColor=white" alt="Excel"> <img src="https://img.shields.io/badge/ETL-FF7A00?style=for-the-badge&logoColor=white" alt="ETL"> <img src="https://img.shields.io/badge/Machine%20Learning-00A6A6?style=for-the-badge&logoColor=white" alt="Machine Learning">
+<img src="https://img.shields.io/badge/Power%20BI-F2C811?style=for-the-badge&logoColor=white" alt="Power BI"> <img src="https://img.shields.io/badge/ETL-025E8C?style=for-the-badge&logoColor=white" alt="ETL"> <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/Data%20Warehousing-217346?style=for-the-badge&logoColor=white" alt="Data Warehousing"> <img src="https://img.shields.io/badge/Pandas-FF7A00?style=for-the-badge&logoColor=white" alt="Pandas"> <img src="https://img.shields.io/badge/Machine%20Learning-00A6A6?style=for-the-badge&logoColor=white" alt="Machine Learning"> <img src="https://img.shields.io/badge/Demand%20Forecasting-6A5ACD?style=for-the-badge&logoColor=white" alt="Demand Forecasting"> <img src="https://img.shields.io/badge/AI%20Sales%20Forecasting-D83B01?style=for-the-badge&logoColor=white" alt="AI Sales Forecasting"> <img src="https://img.shields.io/badge/Excel-F2C811?style=for-the-badge&logoColor=white" alt="Excel">
 
 ---
 
 ## About
 
-This portfolio showcases 2 data analytics and business intelligence projects focused on forecasting, telecommunications, retail analytics, machine learning, business performance analysis. It demonstrates practical experience in transforming raw project work into professional dashboards, analytics solutions, and business-focused reporting outputs.
+I am a data analyst who specializes in turning raw, multi‑source datasets into clear, actionable business intelligence using Python (Pandas), SQL‑based ETL pipelines, and modern data‑warehousing tools. My work focuses on building robust Power BI dashboards and automated reporting solutions that enable finance, strategy, and retail teams to monitor performance, forecast demand, and make data‑driven decisions with confidence. With a strong foundation in analytics, data modeling, and visualization, I deliver end‑to‑end insights that bridge the gap between complex data and strategic outcomes.
 
 ---
 
@@ -30,7 +30,7 @@ This portfolio showcases 2 data analytics and business intelligence projects foc
 
 ## 1. Revenue Forecasting and Performance Analysis of Vodafone Qatar (2021–2023)
 
-Telecom analytics project focused on revenue forecasting, churn analysis, KPI monitoring, and business reporting.
+Developed a unified, ML‑ready data foundation for Vodafone Qatar’s 2021‑2023 telecom performance, enabling accurate revenue forecasting and churn analysis. Leveraged NexusMax, Python, and Microsoft Fabric to transform raw data into actionable business intelligence for finance and strategy teams.
 
 <br><br>
 
@@ -55,7 +55,7 @@ Telecom analytics project focused on revenue forecasting, churn analysis, KPI mo
 
 ## 2. Walmart Store Sales
 
-Retail sales analytics project using Power BI to analyze store performance, sales trends, and business insights.
+Developed an interactive Power BI dashboard analyzing year‑over‑year sales trends across 45 U.S. Walmart stores from 2010‑2012, incorporating custom date tables, DAX measures, and KPI visualizations.
 
 <br><br>
 
@@ -72,6 +72,4 @@ Retail sales analytics project using Power BI to analyze store performance, sale
 
 ## Contact
 
-
- | [GitHub](https://github.com/kalkidan2129)
- | [Email](mailto:kalkidankin@gmail.com)
+<a href="https://github.com/kalkidan2129"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"></a> <a href="mailto:Kalkidankin@gmail.com"><img src="https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white"></a>
