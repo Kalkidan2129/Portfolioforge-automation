@@ -1,5 +1,28 @@
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
-.DS_Store
-published-portfolio/
+
+# Generated portfolios
 generated-portfolio/
+
+# Published repositories
+published-portfolio*
+published-portfolio-*/
+
+# Runtime files
+ui-portfolio-request.json
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vite
+portfolioforge-ui/dist/
+
+# VS Code
+.vscode/

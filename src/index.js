@@ -79,7 +79,7 @@ async function pushGeneratedPortfolioToGitHub() {
   const repoName = process.env.GITHUB_REPO_NAME;
 
   const sourceFolder = path.resolve('generated-portfolio');
-  const publishFolder = path.resolve('../published-portfolio');
+  const publishFolder = path.resolve(`../published-portfolio-${repoName}`);
 
   if (!username || !token || !repoName) {
     console.log('Missing GitHub username, token, or repo name.');
@@ -226,6 +226,27 @@ function askQuestion(question) {
 }
 
 async function collectStudentProfile() {
+  if (fs.existsSync('ui-portfolio-request.json')) {
+  const uiRequest = JSON.parse(fs.readFileSync('ui-portfolio-request.json', 'utf-8'));
+
+  studentProfile.fullName = uiRequest.fullName;
+  studentProfile.professionalTitle = uiRequest.professionalTitle;
+  studentProfile.linkedinUrl = uiRequest.linkedinUrl;
+  studentProfile.email = uiRequest.email;
+  studentProfile.githubUsername = uiRequest.githubUsername;
+  studentProfile.repoName = uiRequest.repoName;
+
+  process.env.GITHUB_USERNAME = uiRequest.githubUsername;
+  process.env.GITHUB_TOKEN = uiRequest.githubToken;
+  process.env.GITHUB_REPO_NAME = uiRequest.repoName;
+  process.env.OPENROUTER_API_KEY = uiRequest.openRouterApiKey;
+
+  console.log('\nLoaded student profile from UI request.');
+  console.log(`Student: ${studentProfile.fullName}`);
+  console.log(`Portfolio repo: ${studentProfile.repoName}\n`);
+
+  return;
+}
   if (fs.existsSync('student-profile.json')) {
   const savedProfile = JSON.parse(fs.readFileSync('student-profile.json', 'utf-8'));
   Object.assign(studentProfile, savedProfile);
@@ -294,9 +315,21 @@ async function run() {
   console.log("PortfolioForge AI started\n");
 
   await collectStudentProfile();
+  
+  if (fs.existsSync('ui-portfolio-request.json')) {
+  const uiRequest = JSON.parse(fs.readFileSync('ui-portfolio-request.json', 'utf-8'));
+
+  links.push(...(uiRequest.projectLinks || []));
+
+  console.log('\nLoaded project links from UI request:');
+  links.forEach((link, index) => {
+    console.log(`  ${index + 1}. ${link}`);
+  });
+}
 
   await createGitHubRepo();
-  
+
+  if (links.length === 0) {
   while (links.length < MAX_LINKS) {
     const input = await promptForLink();
     
@@ -327,6 +360,7 @@ async function run() {
     
     links.push(input);
     console.log(`Added: ${input}`);
+  }
   }
   
   if (links.length === MAX_LINKS) {
@@ -698,7 +732,11 @@ ${[
   fs.writeFileSync('generated-portfolio/README.md', mainReadmeContent);
   console.log('Main portfolio README saved to generated-portfolio/README.md');
   await pushGeneratedPortfolioToGitHub();
-  await page.waitForTimeout(300000);
+  if (!browser.isConnected()) {
+    console.log("Browser already closed.");
+    return;
+  }
+
   await browser.close();
   console.log("Browser workflow complete.");
 }
