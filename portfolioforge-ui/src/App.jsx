@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
   const [fullName, setFullName] = useState('');
@@ -8,7 +8,10 @@ function App() {
   const [githubUsername, setGithubUsername] = useState('');
   const [githubToken, setGithubToken] = useState('');
   const [repoName, setRepoName] = useState('');
-  const [openRouterApiKey, setOpenRouterApiKey] = useState('');
+  
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [connectedUsername, setConnectedUsername] = useState('');
+
   const [projectLink1, setProjectLink1] = useState('');
   const [projectLink2, setProjectLink2] = useState('');
   const [projectLink3, setProjectLink3] = useState('');
@@ -20,6 +23,19 @@ function App() {
   const [currentStep, setCurrentStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState('');
   
+  useEffect(() => {
+  fetch('http://localhost:3001/auth/github/status')
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.connected) {
+        setGithubConnected(true);
+        setConnectedUsername(data.username);
+        setGithubUsername(data.username);
+      }
+    })
+    .catch(() => {});
+}, []);
+
   async function handleGeneratePortfolio() {
   const formData = {
     fullName,
@@ -27,14 +43,13 @@ function App() {
     linkedinUrl,
     email,
     githubUsername,
-    githubToken,
     repoName,
-    openRouterApiKey,
+    
     projectLinks: [projectLink1, projectLink2, projectLink3].filter(Boolean)
   };
 
-  if (!fullName || !githubUsername || !githubToken || !repoName || !projectLink1) {
-    setStatusMessage('Please enter full name, GitHub username, GitHub token, repository name, and at least one project link.');
+  if (!fullName || !githubUsername || !githubConnected || !repoName || !projectLink1) {
+    setStatusMessage('Please enter your full name, connect GitHub, enter a repository name, and provide at least one project link.');
     return;
   }
 
@@ -131,7 +146,6 @@ function App() {
   {[
     'Student',
     'GitHub',
-    'AI',
     'Projects',
     'Generate'
   ].map((step, index) => (
@@ -190,13 +204,11 @@ function App() {
       style={{
         width:
           currentStep === 1
-            ? '20%'
+            ? '25%'
             : currentStep === 2
-            ? '40%'
+            ? '50%'
             : currentStep === 3
-            ? '60%'
-            : currentStep === 4
-            ? '80%'
+            ? '75%'
             : '100%',
         background: '#2563eb',
         height: '100%',
@@ -213,7 +225,7 @@ function App() {
       color: '#374151'
     }}
   >
-    Step {currentStep} of 5
+    Step {currentStep} of 4
   </p>
 </div>
 
@@ -270,20 +282,32 @@ function App() {
       Used to create or update the portfolio repository.
     </p>
 
-    <input
-      style={inputStyle}
-      placeholder="GitHub Username"
-      value={githubUsername}
-      onChange={(e) => setGithubUsername(e.target.value)}
-    />
+<div
+  style={{
+    background: githubConnected ? '#dcfce7' : '#fef3c7',
+    border: githubConnected ? '1px solid #22c55e' : '1px solid #f59e0b',
+    color: githubConnected ? '#166534' : '#92400e',
+    padding: '14px',
+    borderRadius: '10px',
+    marginBottom: '16px',
+    fontWeight: '600'
+  }}
+>
+  {githubConnected
+    ? `✓ Connected as ${connectedUsername}`
+    : 'GitHub not connected'}
+</div>
 
-    <input
-      type="password"
-      style={inputStyle}
-      placeholder="GitHub Token"
-      value={githubToken}
-      onChange={(e) => setGithubToken(e.target.value)}
-    />
+{!githubConnected && (
+  <button
+    style={nextButtonStyle}
+    onClick={() => {
+      window.open('http://localhost:3001/auth/github');
+    }}
+  >
+    Connect GitHub
+  </button>
+)}
 
     <input
       style={inputStyle}
@@ -317,66 +341,13 @@ function App() {
 <button
   style={nextButtonStyle}
   onClick={() => {
-    if (!githubUsername || !githubToken || !repoName) {
-      setErrorMessage('Please enter GitHub username, token, and repository name.');
+    if (!githubConnected || !repoName) {
+      setErrorMessage('Please connect GitHub and enter a repository name.');
       return;
     }
 
     setErrorMessage('');
     setCurrentStep(3);
-  }}
->
-  Next: AI Settings
-</button>
-    </div>
-  </div>
-)}
-
-{currentStep === 3 && (
-  <div style={sectionStyle}>
-    <h2>AI Settings</h2>
-
-    <p style={{ color: '#666' }}>
-      Used to generate professional project summaries.
-    </p>
-
-    <input
-      type="password"
-      style={inputStyle}
-      placeholder="OpenRouter API Key"
-      value={openRouterApiKey}
-      onChange={(e) => setOpenRouterApiKey(e.target.value)}
-    />
-{errorMessage && (
-  <p
-    style={{
-      color: '#dc2626',
-      marginBottom: '16px',
-      fontWeight: '600',
-      textAlign: 'center'
-    }}
-  >
-    {errorMessage}
-  </p>
-)}
-    <div>
-      <button
-        style={backButtonStyle}
-        onClick={() => setCurrentStep(2)}
-      >
-        Back
-      </button>
-
-<button
-  style={nextButtonStyle}
-  onClick={() => {
-    if (!openRouterApiKey) {
-      setErrorMessage('Please enter your OpenRouter API key.');
-      return;
-    }
-
-    setErrorMessage('');
-    setCurrentStep(4);
   }}
 >
   Next: Project Links
@@ -385,7 +356,7 @@ function App() {
   </div>
 )}
 
-{currentStep === 4 && (
+{currentStep === 3 && (
   <div style={sectionStyle}>
     <h2>Project Links</h2>
 
@@ -428,7 +399,7 @@ function App() {
     <div>
       <button
         style={backButtonStyle}
-        onClick={() => setCurrentStep(3)}
+        onClick={() => setCurrentStep(2)}
       >
         Back
       </button>
@@ -442,7 +413,7 @@ function App() {
     }
 
     setErrorMessage('');
-    setCurrentStep(5);
+    setCurrentStep(4);
   }}
 >
   Review & Generate
@@ -451,7 +422,7 @@ function App() {
   </div>
 )}
 
-{currentStep === 5 && (
+{currentStep === 4 && (
   <div style={sectionStyle}>
     <h2>Review & Generate</h2>
 
@@ -516,7 +487,7 @@ function App() {
          cursor: isGenerating || statusMessage.includes('Portfolio generated successfully') ? 'not-allowed' : 'pointer'
        }}
        disabled={isGenerating || statusMessage.includes('Portfolio generated successfully')}
-       onClick={() => setCurrentStep(4)}
+       onClick={() => setCurrentStep(3)}
       >
        Back
       </button>

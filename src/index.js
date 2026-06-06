@@ -237,7 +237,7 @@ async function collectStudentProfile() {
   studentProfile.repoName = uiRequest.repoName;
 
   process.env.GITHUB_USERNAME = uiRequest.githubUsername;
-  process.env.GITHUB_TOKEN = uiRequest.githubToken;
+  
   process.env.GITHUB_REPO_NAME = uiRequest.repoName;
   process.env.OPENROUTER_API_KEY = uiRequest.openRouterApiKey;
 
@@ -312,6 +312,14 @@ function promptForLink() {
 }
 
 async function run() {
+  const generatedFolder = path.resolve('generated-portfolio');
+
+  if (fs.existsSync(generatedFolder)) {
+    fs.rmSync(generatedFolder, { recursive: true, force: true });
+  }
+
+  fs.mkdirSync(generatedFolder, { recursive: true });
+
   console.log("PortfolioForge AI started\n");
 
   await collectStudentProfile();
@@ -535,7 +543,13 @@ ${JSON.stringify(project, null, 2)}
       temperature: 0.2
     });
 
-    const rawSummary = response.choices[0].message.content.trim();
+    const summaryContent = response?.choices?.[0]?.message?.content;
+
+    if (!summaryContent || typeof summaryContent !== 'string') {
+      throw new Error('AI summary response was empty or invalid.');
+    }
+
+    const rawSummary = summaryContent.trim();
 
     const cleanedSummary = rawSummary
       .replace(/^["']|["']$/g, '')
@@ -612,7 +626,13 @@ ${JSON.stringify(safeProjects, null, 2)}
       temperature: 0.4
     });
 
-    return response.choices[0].message.content.trim();
+    const aboutContent = response?.choices?.[0]?.message?.content;
+
+    if (!aboutContent || typeof aboutContent !== 'string') {
+      throw new Error('AI homepage about response was empty or invalid.');
+    }
+
+    return aboutContent.trim();
   } catch (error) {
     console.log('AI homepage about generation failed. Using fallback about.');
     console.log(error.message);
@@ -730,6 +750,7 @@ ${[
 `;
  
   fs.writeFileSync('generated-portfolio/README.md', mainReadmeContent);
+  
   console.log('Main portfolio README saved to generated-portfolio/README.md');
   await pushGeneratedPortfolioToGitHub();
   if (!browser.isConnected()) {
@@ -1357,7 +1378,11 @@ function normalizeAIProjectContent(content) {
   };
 
   return {
-    summary: content.summary || '',
+    summary:
+     content.summary &&
+     !/user safety|safe/i.test(content.summary)
+      ? content.summary
+      : '',
     businessProblem: content.businessProblem || '',
     objectives: toArray(content.objectives),
     tools: toArray(content.tools),
@@ -1416,27 +1441,33 @@ ${JSON.stringify(safeProjectData, null, 2)}
      temperature: 0.3
    });
 
-   const rawContent = response.choices[0].message.content.trim();
+   const rawContent = response?.choices?.[0]?.message?.content;
 
-   const jsonStart = rawContent.indexOf('{');
+   if (!rawContent || typeof rawContent !== 'string') {
+     throw new Error('AI response content was empty or invalid.');
+   }
+
+   const cleanedContent = rawContent.trim();
+
+   const jsonStart = cleanedContent.indexOf('{');
    let braceCount = 0;
    let jsonEnd = -1;
 
-  for (let i = jsonStart; i < rawContent.length; i++) {
-    if (rawContent[i] === '{') braceCount++;
-    if (rawContent[i] === '}') braceCount--;
+for (let i = jsonStart; i < cleanedContent.length; i++) {
+  if (cleanedContent[i] === '{') braceCount++;
+  if (cleanedContent[i] === '}') braceCount--;
 
-    if (braceCount === 0) {
-      jsonEnd = i;
-      break;
-    }
+  if (braceCount === 0) {
+    jsonEnd = i;
+    break;
   }
+}
 
-   if (jsonStart === -1 || jsonEnd === -1) {
-     throw new Error('AI response did not contain valid JSON.');
-   }
+if (jsonStart === -1 || jsonEnd === -1) {
+  throw new Error('AI response did not contain valid JSON.');
+}
 
-   const jsonText = rawContent.slice(jsonStart, jsonEnd + 1);
+const jsonText = cleanedContent.slice(jsonStart, jsonEnd + 1);
 
    return normalizeAIProjectContent(JSON.parse(jsonText));
   } catch (error) {
@@ -1449,7 +1480,7 @@ ${JSON.stringify(safeProjectData, null, 2)}
 async function buildProjectPortfolioContent(project) {
   const aiContent = await generateAIProjectContent(project);
 
-  if (aiContent) {
+  if (aiContent && aiContent.summary) {
     return {
       title: project.title,
       category: detectProjectCategory(project),
@@ -1554,5 +1585,6 @@ ${portfolioContent.businessImpact.map(item => `- ${item}`).join('\n')}
 
   console.log(`README saved to ${outputFolder}/README.md`);
   console.log(`Project data saved to ${outputFolder}/project-data.json`);
+  
 }
 run();
