@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+portfolioforge-ui/node_modules/
 
 # Environment variables
 .env
