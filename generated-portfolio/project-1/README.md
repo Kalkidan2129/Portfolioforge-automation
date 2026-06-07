@@ -1,54 +1,56 @@
 
-# Revenue Forecasting and Performance Analysis of Vodafone Qatar (2021–2023)
+# US SCHOOL SHOOTING DASHBOARD
 
 ## Project Summary
 
-This project transforms raw Vodafone Qatar telecom data into an actionable analytics platform, enabling smarter revenue forecasting and performance tracking. By cleaning, enriching, and unifying the dataset with NexusMax, Python, and Microsoft Fabric, it uncovers patterns in revenue, churn, and customer behavior, empowering finance and strategy teams with data‑driven insights.
+School is an educational institution designed to provide learning spaces and learning environments for the teaching of students under the direction of teachers.
+
+    Children, teenager and adults find themselves in these places because they are filled with the desire to learn in order to impact our world. Unfortunately, we have noticed that these places of learning are sometimes turning into fields of violence that destroy lives. School Shooting has become recurring events in America. Having a deeper idea of this situation will allow us to make practical arrangements to better understand them and save lives.
+
+    With school shooting being a major issue in our nation, let’s in this Project analyze the Percentage Fatalities and Year over Year by Month, Category, School type and states in the United States from 1990 to 2020. This will enable a better approach in making decision on how to enhance school security system in US.
 
 ---
 
 ## Business Problem
 
-Telecom revenue performance varies across regions and customer segments, but business teams lack a consolidated view to understand growth and risk. Quarterly revenue increases are offset by fluctuations in churn and subscriber behavior, creating uncertainty for forecasting and budget planning. Without integrated data, finance and strategy groups cannot make confident, data‑driven decisions.
+Organizations need clear analytics outputs that transform raw project data into actionable insights for better decision-making.
 
 ---
 
 ## Objective
 
-- Enhance quarterly revenue forecasting accuracy for better budget allocation
-- Reduce churn in high‑value segments to protect recurring revenue
-- Provide a unified, ML‑ready dataset to support data‑driven strategic decisions
+- Analyze datasets and build machine learning workflows to identify predictive patterns.
+- Prepare and transform data for model training, evaluation, and forecasting tasks.
+- Present AI and machine learning insights in a professional portfolio-ready format.
 
 ---
 
 ## Tools & Technologies
 
 - Python
-- Power BI
-- NexusMax
-- Microsoft Fabric
-- ETL
-- Data Warehousing
+- Pandas
 - Machine Learning
+- Forecasting
+- Data Analytics
 
 ---
 
 ## Project Workflow
 
-- Ingest and standardize raw telecom data
-- Clean, validate, and enrich data using NexusMax and Python
-- Engineer features and train regression models for revenue forecasting
-- Build and publish interactive Power BI dashboards
-- Deploy the ML‑ready dataset and dashboards for ongoing analytics
+- Prepared and cleaned the dataset for machine learning analysis.
+- Explored data patterns and feature relationships.
+- Built predictive or analytical models using Python-based workflows.
+- Evaluated model performance and analytical outputs.
+- Documented findings and business recommendations.
 
 ---
 
 ## Key Insights
 
-- Total revenue grew 14% QoQ to $108K, indicating strong quarterly momentum
-- Churn among high‑value prepaid and postpaid customers exceeds 2.5%, creating avoidable revenue loss
-- Network availability is 99.95%, providing a stable foundation for retention initiatives
-- Regional contributions such as Doha drive a large share of subscriber growth, highlighting segment‑specific opportunities
+- Used SQL queries to extract and analyze structured business data.
+- Joined and transformed relational datasets to support reporting needs.
+- Identified patterns from database records for business decision-making.
+- Presented query-driven insights in a recruiter-friendly analytics format.
 
 ---
 
@@ -60,9 +62,9 @@ Telecom revenue performance varies across regions and customer segments, but bus
 
 ## Business Impact
 
-- Enables finance and strategy teams to make confident, data‑driven decisions
-- Improves visibility into revenue trends, churn risks, and segment performance
-- Supports proactive budgeting and targeted retention strategies to increase retained revenue
+- Supports predictive analytics and data-driven forecasting workflows.
+- Improves business visibility through AI-driven trend and pattern analysis.
+- Demonstrates practical machine learning and predictive analytics skills.
 
 ---
 

@@ -302,8 +302,30 @@ function App() {
   <button
     style={nextButtonStyle}
     onClick={() => {
-      window.open('http://localhost:3001/auth/github');
-    }}
+  window.open(
+  'http://localhost:3001/auth/github',
+  'githubOAuthPopup',
+  'width=300,height=150,top=200,left=550,resizable=no'
+);
+
+  const checkConnection = setInterval(async () => {
+    try {
+      const res = await fetch('http://localhost:3001/auth/github/status');
+      const data = await res.json();
+
+      if (data.connected) {
+        setGithubConnected(true);
+        setConnectedUsername(data.username);
+        setGithubUsername(data.username);
+
+        clearInterval(checkConnection);
+      }
+    } catch (error) {
+      console.error('GitHub connection check failed:', error);
+    }
+  }, 2000);
+}}
+
   >
     Connect GitHub
   </button>

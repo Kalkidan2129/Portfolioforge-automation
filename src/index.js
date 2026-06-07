@@ -555,15 +555,26 @@ ${JSON.stringify(project, null, 2)}
       .replace(/^["']|["']$/g, '')
       .replace(/[\r\n]+/g, ' ')
       .trim();
+    
+    if (
+      !cleanedSummary ||
+      /user safety|safe|triangle|heron|sqrt|area/i.test(cleanedSummary) ||
+      cleanedSummary.length < 30
+    ) {
+      throw new Error('AI card summary was invalid or unrelated.');
+    }
 
     const sentences = cleanedSummary
       .split(/(?<=[.!?])\s+/)
       .filter(Boolean)
       .slice(0, 2);
-
+    
+    console.log('AI CARD SUMMARY:', cleanedSummary);
     return sentences.join(' ');
 
   } catch (error) {
+    console.log('CARD SUMMARY FALLBACK:', project.title);
+    console.log(error.message);
     return generateHomepageProjectSummary(project);
   }
 }
@@ -1469,7 +1480,20 @@ if (jsonStart === -1 || jsonEnd === -1) {
 
 const jsonText = cleanedContent.slice(jsonStart, jsonEnd + 1);
 
-   return normalizeAIProjectContent(JSON.parse(jsonText));
+const aiContent = normalizeAIProjectContent(JSON.parse(jsonText));
+
+if (
+  !aiContent ||
+  !aiContent.summary ||
+  /user safety|safe/i.test(aiContent.summary) ||
+  !aiContent.businessProblem ||
+  !Array.isArray(aiContent.objectives) ||
+  aiContent.objectives.length === 0
+) {
+  throw new Error('AI returned incomplete or invalid portfolio content.');
+}
+
+return aiContent;
   } catch (error) {
     console.log('AI content generation failed. Using fallback content.');
     console.log(error.message);

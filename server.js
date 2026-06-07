@@ -164,10 +164,24 @@ app.get('/auth/github/callback', async (req, res) => {
     connectedGithubUser = userData.login;
 
     res.send(`
-      <h2>GitHub connected successfully!</h2>
-      <p>Connected as: ${connectedGithubUser}</p>
-      <p>You can close this tab and return to PortfolioForge AI.</p>
-    `);
+<html>
+<body style="
+  font-family: Arial;
+  text-align:center;
+  padding-top:40px;
+">
+  <h3>✅ GitHub Connected</h3>
+  <p>${connectedGithubUser}</p>
+
+  <script>
+    setTimeout(() => {
+      window.close();
+    }, 1000);
+  </script>
+</body>
+</html>
+`);
+
   } catch (error) {
     console.error(error);
     res.send('GitHub connection failed.');
