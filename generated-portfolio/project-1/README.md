@@ -1,56 +1,52 @@
 
-# US SCHOOL SHOOTING DASHBOARD
+# Walmart Store Sales
 
-## Project Summary
+## Project Overview
 
-School is an educational institution designed to provide learning spaces and learning environments for the teaching of students under the direction of teachers.
-
-    Children, teenager and adults find themselves in these places because they are filled with the desire to learn in order to impact our world. Unfortunately, we have noticed that these places of learning are sometimes turning into fields of violence that destroy lives. School Shooting has become recurring events in America. Having a deeper idea of this situation will allow us to make practical arrangements to better understand them and save lives.
-
-    With school shooting being a major issue in our nation, let’s in this Project analyze the Percentage Fatalities and Year over Year by Month, Category, School type and states in the United States from 1990 to 2020. This will enable a better approach in making decision on how to enhance school security system in US.
+This project involved creating a detailed sales dashboard for 45 Walmart stores in the US, assessing year-over-year sales performance between February 2010 and October 2012. Using Power BI, the analysis incorporated calendar tables, conditional columns, and DAX measures to provide actionable insights on sales trends during the early recovery from the 2008 recession. The dashboard enables visualization of sales impacts influenced by economic factors such as holiday weeks and unemployment rates.
 
 ---
 
 ## Business Problem
 
-Organizations need clear analytics outputs that transform raw project data into actionable insights for better decision-making.
+Walmart stores, like many discount retailers, experienced fluctuating sales during the recovery period following the 2008 recession. Understanding these sales patterns was critical for identifying factors affecting store performance and optimizing inventory and marketing strategies. The challenge was to analyze multi-year sales data effectively to uncover trends and inform business decisions.
 
 ---
 
 ## Objective
 
-- Analyze datasets and build machine learning workflows to identify predictive patterns.
-- Prepare and transform data for model training, evaluation, and forecasting tasks.
-- Present AI and machine learning insights in a professional portfolio-ready format.
+- Analyze year-over-year sales trends across multiple Walmart stores
+- Incorporate economic indicators like holiday periods and unemployment rates into sales analysis
+- Develop an interactive Power BI dashboard for clear visualization and decision support
 
 ---
 
 ## Tools & Technologies
 
-- Python
-- Pandas
-- Machine Learning
-- Forecasting
-- Data Analytics
+- Power BI Desktop
+- DAX (Data Analysis Expressions)
+- Excel
+- Power Query Editor
+- CSV Data Files
 
 ---
 
 ## Project Workflow
 
-- Prepared and cleaned the dataset for machine learning analysis.
-- Explored data patterns and feature relationships.
-- Built predictive or analytical models using Python-based workflows.
-- Evaluated model performance and analytical outputs.
-- Documented findings and business recommendations.
+- Import Walmart sales CSV data into Power BI Desktop
+- Create calendar and refresh date tables for time intelligence
+- Establish relationships between sales and calendar tables
+- Add conditional columns for holiday flags and unemployment rates
+- Develop DAX measures to calculate total sales, average sales, and year-over-year growth
 
 ---
 
 ## Key Insights
 
-- Used SQL queries to extract and analyze structured business data.
-- Joined and transformed relational datasets to support reporting needs.
-- Identified patterns from database records for business decision-making.
-- Presented query-driven insights in a recruiter-friendly analytics format.
+- Sales showed variability influenced by holiday weeks and economic conditions
+- Year-over-year sales growth metrics highlighted recovery trends post-recession
+- Unemployment rate groupings correlated with fluctuations in store sales
+- Custom sorting of calendar data improved clarity in monthly sales trend analysis
 
 ---
 
@@ -62,9 +58,9 @@ Organizations need clear analytics outputs that transform raw project data into 
 
 ## Business Impact
 
-- Supports predictive analytics and data-driven forecasting workflows.
-- Improves business visibility through AI-driven trend and pattern analysis.
-- Demonstrates practical machine learning and predictive analytics skills.
+- Enabled Walmart to identify sales drivers during economic recovery
+- Provided actionable insights to optimize store operations and marketing efforts
+- Improved data-driven decision-making through interactive dashboards
 
 ---
 

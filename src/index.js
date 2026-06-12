@@ -7,13 +7,9 @@ const { chromium } = require('playwright');
 const OpenAI = require('openai');
 
 const openai = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    'HTTP-Referer': 'http://localhost',
-    'X-OpenRouter-Title': 'PortfolioForge AI'
-  }
+  apiKey: process.env.OPENAI_API_KEY
 });
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -414,13 +410,23 @@ async function processProjects(projectLinks) {
     .trim()
     .replace(/\s+/g, ' ')
     .replace(/python\s*-\s*pandas/i, 'Pandas')
-    .replace(/powerbi/i, 'Power BI');
-};
+    .replace(/powerbi/i, 'Power BI')
+    .replace(/power bi desktop/i, 'Power BI')
+    .replace(/power query editor/i, 'Power Query')
+    .replace(/csv data files/i, 'CSV')
+    .replace(/sql server management studio/i, 'SSMS')
+    .replace(/microsoft windows os/i, '')
+    .replace(/^t$/i, '')
+    .replace(/power bi service/i, 'Power BI')
+    .replace(/power bi themes/i, 'Power BI')
+    .replace(/power bi report server/i, 'Power BI')
+    .replace(/dax\s*\(.*?\)/i, 'DAX')
+  };
 
   const skillMap = new Map();
 
 allProjectsData
-  .flatMap(project => project.tags || [])
+  .flatMap(project => project.portfolioContent?.tools || project.tags || [])
   .forEach(skill => {
     const label = formatSkillLabel(skill);
     const key = normalizeSkillKey(label);
@@ -469,58 +475,59 @@ const skillsBadges = skills.map((skill, index) => {
 
 function generateHomepageProjectSummary(project) {
   const category = detectProjectCategory(project);
+  const title = project.title || 'Data Analytics Project';
 
   if (category === 'telecom') {
-    return 'Telecom analytics project focused on revenue forecasting, churn analysis, KPI monitoring, and business reporting.';
+    return `Analyzed telecom data in ${title} to support revenue, churn, and performance reporting through clear analytics and dashboard insights.`;
   }
 
   if (category === 'retail') {
-    return 'Retail sales analytics project using Power BI to analyze store performance, sales trends, and business insights.';
-  }
-
-  if (category === 'finance') {
-    return 'Financial analytics project focused on forecasting, KPI reporting, and business performance analysis.';
+    return `Built a retail analytics project for ${title}, focusing on sales trends, store performance, and business reporting using dashboard-driven insights.`;
   }
 
   if (category === 'healthcare') {
-    return 'Healthcare analytics project focused on operational reporting, patient insights, and performance monitoring.';
+    return `Developed a healthcare analytics project for ${title}, transforming healthcare data into clear reporting insights for operational and business decision-making.`;
+  }
+
+  if (category === 'finance') {
+    return `Created a financial analytics project for ${title}, focusing on revenue, forecasting, profitability, and performance reporting for business decision-making.`;
+  }
+
+  if (category === 'machine_learning') {
+    return `Prepared and analyzed project data for ${title}, supporting forecasting, machine learning, and predictive analytics workflows.`;
   }
 
   if (category === 'sql_analytics') {
-    return 'SQL and database analytics project focused on querying, reporting, ETL, and business intelligence workflows.';
+    return `Built a SQL-based analytics project for ${title}, using structured data analysis to support reporting, insights, and business intelligence workflows.`;
   }
 
   if (category === 'tableau') {
-    return 'Tableau dashboard project focused on data visualization, KPI tracking, and business reporting.';
+    return `Created a Tableau analytics project for ${title}, using interactive visualizations to communicate trends, patterns, and business insights.`;
   }
 
-  if (category === 'data_engineering') {
-    return 'Data engineering project focused on ETL pipelines, data transformation, and scalable analytics workflows.';
+  if (/crime|shooting|safety|incident/i.test(title)) {
+    return `Analyzed public safety data in ${title} to identify incident patterns, trends, and reporting insights that support data-driven decision-making.`;
   }
 
-  if (category === 'cloud') {
-    return 'Cloud analytics project focused on scalable reporting, automation, and cloud-based data workflows.';
+  if (/traffic|aviation|wildlife|air/i.test(title)) {
+    return `Analyzed aviation and wildlife strike data in ${title} to identify operational risk patterns and support safety-focused reporting.`;
   }
 
-  if (category === 'excel_analytics') {
-    return 'Excel analytics project focused on reporting, business analysis, and operational insights.';
-  }
-
-  return 'Business intelligence and analytics project focused on reporting, dashboards, and data-driven decision-making.';
+  return `Developed a data analytics project for ${title}, using reporting, visualization, and business intelligence techniques to communicate key insights.`;
 }
 
 async function generateAIProjectCardSummary(project) {
   if (!process.env.OPENROUTER_API_KEY) {
     return generateHomepageProjectSummary(project);
   }
-
+let rawSummary = '';
   try {
     const prompt = `
 Create a GitHub portfolio project card summary.
 
 Requirements:
-- EXACTLY 2 short sentences
-- Maximum 45 words total
+- EXACTLY 1 sentences
+- Maximum 25 words total
 - Professional and recruiter-friendly
 - Business focused
 - Mention the main tool only if clearly present
@@ -533,7 +540,7 @@ ${JSON.stringify(project, null, 2)}
 `;
 
     const response = await openai.chat.completions.create({
-      model: 'openrouter/free',
+      model: 'gpt-4.1-mini',
       messages: [
         {
           role: 'user',
@@ -549,7 +556,7 @@ ${JSON.stringify(project, null, 2)}
       throw new Error('AI summary response was empty or invalid.');
     }
 
-    const rawSummary = summaryContent.trim();
+    rawSummary = summaryContent.trim();
 
     const cleanedSummary = rawSummary
       .replace(/^["']|["']$/g, '')
@@ -558,7 +565,7 @@ ${JSON.stringify(project, null, 2)}
     
     if (
       !cleanedSummary ||
-      /user safety|safe|triangle|heron|sqrt|area/i.test(cleanedSummary) ||
+      /user safety:\s*safe|triangle|heron|sqrt/i.test(cleanedSummary) ||
       cleanedSummary.length < 30
     ) {
       throw new Error('AI card summary was invalid or unrelated.');
@@ -567,7 +574,7 @@ ${JSON.stringify(project, null, 2)}
     const sentences = cleanedSummary
       .split(/(?<=[.!?])\s+/)
       .filter(Boolean)
-      .slice(0, 2);
+      .slice(0, 1);
     
     console.log('AI CARD SUMMARY:', cleanedSummary);
     return sentences.join(' ');
@@ -575,6 +582,7 @@ ${JSON.stringify(project, null, 2)}
   } catch (error) {
     console.log('CARD SUMMARY FALLBACK:', project.title);
     console.log(error.message);
+    
     return generateHomepageProjectSummary(project);
   }
 }
@@ -627,7 +635,7 @@ ${JSON.stringify(safeProjects, null, 2)}
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'openrouter/free',
+      model: 'gpt-4.1-mini',
       messages: [
         {
           role: 'user',
@@ -718,21 +726,29 @@ ${homepageAbout}
 ${allProjectsData.map((project, index) => `
 <table>
 <tr>
-<td width="40%">
+<td width="45%" align="center" valign="middle">
 
-<img src="${project.imageUrl || ''}" width="100%">
+<img src="${project.imageUrl || ''}" width="100%" height="220">
 
 </td>
 
-<td width="60%">
+<td width="55%" valign="top">
 
-## ${index + 1}. ${project.title}
 
-${homepageCardSummaries[index] || generateHomepageProjectSummary(project)}
+## ${project.title}
 
-<br><br>
+${project.portfolioContent?.portfolioSummary || homepageCardSummaries[index] || generateHomepageProjectSummary(project)}
 
-<a href="./project-${index + 1}/README.md">View Full Project →</a>
+ ${(project.portfolioContent?.tools || project.tags || [])
+  .slice(0, 3)
+  .map(tool => `<code>${tool.replace(/\s*\([^)]*\)/g, '')}</code>`)
+  .join(' ')}
+
+<br>
+
+<p align="right">
+  <a href="./project-${index + 1}/README.md"><b>View Full Project →</b></a>
+</p>
 
 </td>
 </tr>
@@ -862,15 +878,23 @@ stepContent = stepContent
   .trim();
 
   const projectData = {
-    title: projectTitle,
-    description,
-    tags,
-    imageUrl: projectImage,
-    stepByStepLink,
-    tasksLink,
-    stepByStepContent,
-    allStepDetails
-  };
+  title: projectTitle,
+  description,
+  tags,
+  imageUrl: projectImage,
+  stepByStepLink,
+  tasksLink,
+  stepByStepContent,
+  allStepDetails,
+
+  category: '',
+  industry: '',
+  tools: [],
+  skills: [],
+  portfolioSummary: '',
+  keyInsights: [],
+  businessImpact: []
+};
   allProjectsData.push(projectData);
   console.log('\n--- Extracted Project Data ---');
   console.log(JSON.stringify(projectData, null, 2));
@@ -1389,6 +1413,9 @@ function normalizeAIProjectContent(content) {
   };
 
   return {
+    category: content.category || '',
+    industry: content.industry || '',
+    portfolioSummary: content.portfolioSummary || '',
     summary:
      content.summary &&
      !/user safety|safe/i.test(content.summary)
@@ -1397,6 +1424,7 @@ function normalizeAIProjectContent(content) {
     businessProblem: content.businessProblem || '',
     objectives: toArray(content.objectives),
     tools: toArray(content.tools),
+    skills: toArray(content.skills),
     workflow: toArray(content.workflow),
     keyInsights: toArray(content.keyInsights),
     businessImpact: toArray(content.businessImpact)
@@ -1427,10 +1455,14 @@ Use ONLY the provided project data. Do not invent metrics, results, tools, or ou
 
 Return strict JSON only with this exact shape:
 {
+  "category": "Specific project category, such as Retail Analytics, Healthcare Analytics, Telecom Analytics, Business Intelligence, SQL Analytics, Machine Learning, or Data Engineering",
+  "industry": "Relevant industry or domain, such as Retail, Healthcare, Telecom, Finance, Public Safety, Aviation, or General Business",
+  "portfolioSummary": "Exactly 2 short recruiter-friendly sentences for the homepage project card",
   "summary": "2-3 sentence professional project summary",
   "businessProblem": "2-3 sentence business problem",
   "objectives": ["3 concise bullets"],
   "tools": ["5-8 relevant tools/technologies"],
+  "skills": ["5-8 professional skills demonstrated by this project"],
   "workflow": ["5 concise professional workflow steps"],
   "keyInsights": ["4 realistic insights based on the project data"],
   "businessImpact": ["3 concise business impact bullets"]
@@ -1439,10 +1471,10 @@ Return strict JSON only with this exact shape:
 Project data:
 ${JSON.stringify(safeProjectData, null, 2)}
 `;
-
+let rawContent = '';
   try {
     const response = await openai.chat.completions.create({
-     model: 'openrouter/free',
+     model: 'gpt-4.1-mini',
      messages: [
        {
          role: 'user',
@@ -1452,7 +1484,7 @@ ${JSON.stringify(safeProjectData, null, 2)}
      temperature: 0.3
    });
 
-   const rawContent = response?.choices?.[0]?.message?.content;
+   rawContent = response?.choices?.[0]?.message?.content;
 
    if (!rawContent || typeof rawContent !== 'string') {
      throw new Error('AI response content was empty or invalid.');
@@ -1497,6 +1529,7 @@ return aiContent;
   } catch (error) {
     console.log('AI content generation failed. Using fallback content.');
     console.log(error.message);
+    console.log('AI RAW RESPONSE:', typeof rawContent !== 'undefined' ? rawContent : 'No raw response available');
     return null;
   }
 }
@@ -1507,12 +1540,15 @@ async function buildProjectPortfolioContent(project) {
   if (aiContent && aiContent.summary) {
     return {
       title: project.title,
-      category: detectProjectCategory(project),
+      category: aiContent.category || detectProjectCategory(project),
+      industry: aiContent.industry || '',
       generationSource: 'ai',
+      portfolioSummary: aiContent.portfolioSummary || aiContent.summary,
       summary: aiContent.summary,
       businessProblem: aiContent.businessProblem,
       objectives: aiContent.objectives,
       tools: aiContent.tools,
+      skills: aiContent.skills,
       workflow: aiContent.workflow,
       keyInsights: aiContent.keyInsights,
       businessImpact: aiContent.businessImpact,
@@ -1523,11 +1559,14 @@ async function buildProjectPortfolioContent(project) {
   return {
     title: project.title,
     category: detectProjectCategory(project),
+    industry: '',
     generationSource: 'fallback',
+    portfolioSummary: generateProjectSummaryText(project),
     summary: generateProjectSummaryText(project),
     businessProblem: generateBusinessProblem(project),
     objectives: generateProjectObjectives(project),
     tools: generateProfessionalTools(project),
+    skills: generateProfessionalTools(project),
     workflow: generateProjectWorkflow(project),
     keyInsights: generateProfessionalInsights(project),
     businessImpact: generateBusinessImpact(project),
@@ -1536,12 +1575,12 @@ async function buildProjectPortfolioContent(project) {
 }
 
   const portfolioContent = await buildProjectPortfolioContent(projectData);
-  
+  projectData.portfolioContent = portfolioContent;
 
   const readmeContent = `
 # ${projectData.title}
 
-## Project Summary
+## Project Overview
 
 ${portfolioContent.summary}
 

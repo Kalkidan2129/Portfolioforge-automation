@@ -190,7 +190,7 @@ app.get('/auth/github/callback', async (req, res) => {
 
 app.get('/auth/github/status', (req, res) => {
   res.json({
-    connected: Boolean(githubOAuthToken),
+    connected: Boolean(githubOAuthToken && connectedGithubUser),
     username: connectedGithubUser
   });
 });
