@@ -18,7 +18,7 @@ function App() {
   const [projectName1, setProjectName1] = useState('');
   const [projectName2, setProjectName2] = useState('');
   const [projectName3, setProjectName3] = useState('');
-  const [statusMessage, setStatusMessage] = useState('No portfolio generated yet.');
+  const [statusMessage, setStatusMessage] = useState('Ready to generate your GitHub portfolio 🚀');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState('');
@@ -134,26 +134,90 @@ function App() {
 
   return (
     <div style={{ background: '#f5f7fb', minHeight: '100vh', padding: '56px 40px' }}>
-      <div style={{ maxWidth: '850px', margin: '0 auto' }}>
-        <div
+  <div style={{ maxWidth: '850px', margin: '0 auto' }}>
+
+{/* Header + Stepper Row */}
+<div
   style={{
     display: 'flex',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: '30px',
-    padding: '20px'
+    marginBottom: '30px'
   }}
 >
+  {/* PortfolioForge AI Header */}
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      marginBottom: '15px'
+    }}
+  >
+    <div
+      style={{
+        width: '38px',
+        height: '38px',
+        background: '#2563eb',
+        borderRadius: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#fff',
+        fontWeight: '700',
+        marginRight: '10px'
+      }}
+    >
+      🚀
+    </div>
+
+    <span
+      style={{
+        fontSize: '25px',
+        fontWeight: '750',
+        color: '#111827'
+      }}
+    >
+      PortfolioForge AI
+    </span>
+  </div>
+
+  <div
+  style={{
+    position: 'relative',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    columnGap: '40px',
+    width: '520px',
+    marginLeft: 'auto',
+    marginBottom: '40px'
+  }}
+>
+  {/* connecting line */}
+  <div
+    style={{
+      position: 'absolute',
+      top: '20px',
+      left: '65px',
+      right: '65px',
+      height: '2px',
+      background: '#e5e7eb',
+      zIndex: 0
+    }}
+  />
+
   {[
-    'Student',
-    'GitHub',
-    'Projects',
-    'Generate'
+    'Profile',
+    'Connect GitHub',
+    'Add Projects',
+    'Preview & Publish'
   ].map((step, index) => (
     <div
       key={step}
       style={{
         textAlign: 'center',
-        flex: 1
+        position: 'relative',
+        zIndex: 1,
+        whiteSpace: 'nowrap'
       }}
     >
       <div
@@ -185,63 +249,186 @@ function App() {
     </div>
   ))}
 </div>
-
-<div
-  style={{
-    width: '100%',
-    marginBottom: '25px'
-  }}
->
-  <div
-    style={{
-      background: '#e5e7eb',
-      height: '10px',
-      borderRadius: '999px',
-      overflow: 'hidden'
-    }}
-  >
-    <div
-      style={{
-        width:
-          currentStep === 1
-            ? '25%'
-            : currentStep === 2
-            ? '50%'
-            : currentStep === 3
-            ? '75%'
-            : '100%',
-        background: '#2563eb',
-        height: '100%',
-        transition: '0.3s'
-      }}
-    />
-  </div>
-
-  <p
-    style={{
-      textAlign: 'center',
-      marginTop: '10px',
-      fontWeight: '600',
-      color: '#374151'
-    }}
-  >
-    Step {currentStep} of 4
-  </p>
 </div>
 
-        <h1 style={{ fontSize: '52px', marginBottom: '10px', textAlign: 'center' }}>PortfolioForge AI</h1>
+
+        {/*<h1 style={{ fontSize: '52px', marginBottom: '10px', textAlign: 'center' }}>PortfolioForge AI</h1>
         <p style={{ fontSize: '20px', color: '#555', textAlign: 'center', marginBottom: '32px' }}>
           Generate professional GitHub portfolios from Colaberry projects.
         </p>
+        */}
 
       {currentStep === 1 && (
         <div style={sectionStyle}>
-          <h2>Student Information</h2>
-          <p style={{ color: '#666' }}>This information will appear on the generated portfolio.</p>
-          <input style={inputStyle} placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <input style={inputStyle} placeholder="Professional Title" value={professionalTitle} onChange={(e) => setProfessionalTitle(e.target.value)} />
-          <input style={inputStyle} placeholder="LinkedIn URL" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} />
-          <input style={inputStyle} placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} />
+<div style={{ textAlign: 'left', marginBottom: '30px' }}>
+  <span
+    style={{
+      background: '#4f46e5',
+      color: 'white',
+      padding: '6px 12px',
+      borderRadius: '8px',
+      fontSize: '13px',
+      fontWeight: '700'
+    }}
+  >
+
+    
+    STEP 1
+  </span>
+
+  <h2
+    style={{
+      marginTop: '18px',
+      marginBottom: '10px',
+      fontSize: '28px',
+      fontWeight: '700'
+    }}
+  >
+    Tell us about yourself 👋
+  </h2>
+
+  <p
+    style={{
+      color: '#64748b',
+      fontSize: '15px',
+      lineHeight: '1.6',
+      margin: 0
+    }}
+  >
+    This information will appear on your generated portfolio
+  </p>
+</div>
+          <div style={{ marginBottom: '18px' }}>
+  <label
+  style={{
+    display: 'block',
+    textAlign: 'left',
+    marginBottom: '8px',
+    fontWeight: '700',
+    fontSize: '15px',
+    color: '#111827'
+  }}
+>
+  Full Name
+</label>
+
+  <input
+    style={inputStyle}
+    placeholder="Enter your full name"
+    value={fullName}
+    onChange={(e) => setFullName(e.target.value)}
+    style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '48px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '12px',
+        fontSize: '16px',
+        outline: 'none'
+      }}
+  />
+</div>
+
+<div style={{ marginBottom: '18px' }}>
+  <label
+    style={{
+      display: 'block',
+      textAlign: 'left',
+      marginBottom: '8px',
+      fontWeight: '700',
+      fontSize: '15px',
+      color: '#111827'
+    }}
+  >
+    Professional Title
+  </label>
+
+  <input
+    style={inputStyle}
+    placeholder="e.g. Power BI Developer"
+    value={professionalTitle}
+    onChange={(e) => setProfessionalTitle(e.target.value)}
+    style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '48px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '12px',
+        fontSize: '16px',
+        outline: 'none'
+      }}
+  />
+</div>
+
+<div style={{ marginBottom: '18px' }}>
+  <label
+    style={{
+      display: 'block',
+      textAlign: 'left',
+      marginBottom: '8px',
+      fontWeight: '700',
+      fontSize: '15px',
+      color: '#111827'
+    }}
+  >
+    LinkedIn URL
+  </label>
+
+  <input
+    style={inputStyle}
+    placeholder="https://linkedin.com/in/yourprofile"
+    value={linkedinUrl}
+    onChange={(e) => setLinkedinUrl(e.target.value)}
+    style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '48px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '12px',
+        fontSize: '16px',
+        outline: 'none'
+      }}
+  />
+</div>
+
+<div style={{ marginBottom: '18px' }}>
+  <label
+    style={{
+      display: 'block',
+      textAlign: 'left',
+      marginBottom: '8px',
+      fontWeight: '700',
+      fontSize: '15px',
+      color: '#111827'
+    }}
+  >
+    Email Address
+  </label>
+
+  <input
+    style={inputStyle}
+    placeholder="you@example.com"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '48px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '12px',
+        fontSize: '16px',
+        outline: 'none'
+      }}
+  />
+</div>
 {errorMessage && (
   <p
     style={{
@@ -254,6 +441,14 @@ function App() {
     {errorMessage}
   </p>
 )}
+<div
+  style={{
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '24px'
+  }}
+>
+
           <button
              style={nextButtonStyle}
              onClick={() => {
@@ -269,33 +464,81 @@ function App() {
 
             }}
            >
-            Next: GitHub Setup
+            Continue →
           </button>
-        </div>
+        </div></div>
       )}
 
 {currentStep === 2 && (
   <div style={sectionStyle}>
-    <h2>GitHub Setup</h2>
+    <div style={{ textAlign: 'left', marginBottom: '28px' }}>
 
-    <p style={{ color: '#666' }}>
-      Used to create or update the portfolio repository.
-    </p>
+  <span
+    style={{
+      background: '#4f46e5',
+      color: 'white',
+      padding: '6px 12px',
+      borderRadius: '8px',
+      fontSize: '13px',
+      fontWeight: '700'
+    }}
+  >
+    STEP 2
+  </span>
+
+  <h2
+    style={{
+      marginTop: '18px',
+      marginBottom: '10px',
+      fontSize: '28px',
+      fontWeight: '700'
+    }}
+  >
+    Connect your GitHub 🐙
+  </h2>
+
+  <p
+    style={{
+      color: '#64748b',
+      fontSize: '15px',
+      lineHeight: '1.6',
+      maxWidth: '500px'
+    }}
+  >
+    Connect GitHub to create your portfolio
+  </p>
+
+</div>
 
 <div
   style={{
     background: githubConnected ? '#dcfce7' : '#fef3c7',
     border: githubConnected ? '1px solid #22c55e' : '1px solid #f59e0b',
     color: githubConnected ? '#166534' : '#92400e',
-    padding: '14px',
+    padding: '16px',
     borderRadius: '10px',
     marginBottom: '16px',
-    fontWeight: '600'
+    textAlign: 'center'
   }}
 >
-  {githubConnected
-    ? `✓ Connected as ${connectedUsername}`
-    : 'GitHub not connected'}
+  {githubConnected ? (
+    <>
+      <div style={{ fontWeight: '700', fontSize: '18px' }}>
+        ✅ GitHub connected successfully
+      </div>
+
+      <div
+        style={{
+          fontSize: '14px',
+          marginTop: '4px'
+        }}
+      >
+        Connected as {connectedUsername}
+      </div>
+    </>
+  ) : (
+    'GitHub not connected'
+  )}
 </div>
 
 {!githubConnected && (
@@ -331,14 +574,61 @@ function App() {
   </button>
 )}
 
+    <div style={{ marginBottom: '24px' }}>
+
+  <label
+    style={{
+      display: 'block',
+      textAlign: 'left',
+      marginBottom: '10px',
+      fontWeight: '700',
+      fontSize: '16px',
+      color: '#111827'
+    }}
+  >
+    Portfolio Repository Name
+  </label>
+
+  <div style={{ position: 'relative' }}>
+    <span
+      style={{
+        position: 'absolute',
+        left: '16px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: '#9ca3af',
+        fontSize: '18px'
+      }}
+    >
+    </span>
     <input
-      style={inputStyle}
-      placeholder="Portfolio Repository Name"
       value={repoName}
       onChange={(e) => setRepoName(e.target.value)}
+      placeholder="Repository name "
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '48px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '12px',
+        fontSize: '16px',
+        outline: 'none'
+      }}
     />
-
-    
+  </div>
+</div>
+<p
+  style={{
+    color: '#64748b',
+    fontSize: '14px',
+    marginTop: '8px',
+    textAlign: 'left'
+  }}
+>
+  This repository will be created or updated with your generated portfolio.
+</p>
 {errorMessage && (
   <p
     style={{
@@ -351,12 +641,21 @@ function App() {
     {errorMessage}
   </p>
 )}
-    <div>   
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: '24px',
+        maxWidth: '850px',
+        margin: '24px auto 0 auto'
+      }}
+    >  
       <button
         style={backButtonStyle}
         onClick={() => setCurrentStep(1)}
       >
-        Back
+        ← Back
       </button>
 
 
@@ -372,7 +671,7 @@ function App() {
     setCurrentStep(3);
   }}
 >
-  Next: Project Links
+  Continue →
 </button>
     </div>
   </div>
@@ -380,32 +679,219 @@ function App() {
 
 {currentStep === 3 && (
   <div style={sectionStyle}>
-    <h2>Project Links</h2>
+    <div
+  style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px'
+  }}
+>
+  <div style={{ textAlign: 'left' }}>
+    <span
+      style={{
+        background: '#4f46e5',
+        color: 'white',
+        padding: '6px 12px',
+        borderRadius: '8px',
+        fontSize: '13px',
+        fontWeight: '700'
+      }}
+    >
+      STEP 3
+    </span>
 
-    <p style={{ color: '#666' }}>
-      Add up to 3 Colaberry project links.
+    <h2
+  style={{
+    marginTop: '18px',
+    marginBottom: '10px',
+    fontSize: '28px',
+    fontWeight: '700'
+  }}
+>
+  Colaberry Project Links 🔗
+</h2>
+
+    <p
+    style={{
+      color: '#64748b',
+      fontSize: '15px',
+      lineHeight: '1.6',
+      maxWidth: '500px'
+    }}
+  >
+      Add up to 3 project links and we’ll analyze them to build your portfolio
     </p>
+  </div>
+
+
+</div>
+<div style={{ width: '100%', margin: '0 auto' }}>
+
+    <div style={{ marginBottom: '18px' }}>
+  <label
+  style={{
+    display: 'block',
+    textAlign: 'left',
+    marginBottom: '10px',
+    fontWeight: '700',
+    fontSize: '18px',
+    letterSpacing: '-0.2px',
+    color: '#111827'
+  }}
+>
+    Project Link 1
+  </label>
+
+  <div style={{ position: 'relative' }}>
+    <span
+      style={{
+        position: 'absolute',
+        left: '14px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: '#9ca3af'
+      }}
+    >
+      🔗
+    </span>
 
     <input
-      style={inputStyle}
-      placeholder="Project Link 1"
+      type="text"
+      placeholder="https://app.colaberry.com/..."
       value={projectLink1}
       onChange={(e) => setProjectLink1(e.target.value)}
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '42px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '8px',
+        fontSize: '15px',
+        outline: 'none'
+      }}
     />
+  </div>
+</div>
+
+    <div style={{ marginBottom: '18px' }}>
+  <label
+  style={{
+    display: 'block',
+    textAlign: 'left',
+    marginBottom: '10px',
+    fontWeight: '700',
+    fontSize: '18px',
+    letterSpacing: '-0.2px',
+    color: '#111827'
+  }}
+>
+    Project Link 2
+     <span
+    style={{
+      fontWeight: '400',
+      fontSize: '14px',
+      color: '#6b7280',
+      marginLeft: '6px'
+    }}
+  >
+    (Optional)
+  </span>
+  </label>
+
+  <div style={{ position: 'relative' }}>
+    <span
+      style={{
+        position: 'absolute',
+        left: '14px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: '#9ca3af'
+      }}
+    >
+      🔗
+    </span>
 
     <input
-      style={inputStyle}
-      placeholder="Project Link 2"
+      type="text"
+      placeholder="https://app.colaberry.com/..."
       value={projectLink2}
       onChange={(e) => setProjectLink2(e.target.value)}
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '42px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '8px',
+        fontSize: '15px',
+        outline: 'none'
+      }}
     />
+  </div>
+</div>
+
+    <div style={{ marginBottom: '18px' }}>
+  <label
+  style={{
+    display: 'block',
+    textAlign: 'left',
+    marginBottom: '10px',
+    fontWeight: '700',
+    fontSize: '18px',
+    letterSpacing: '-0.2px',
+    color: '#111827'
+  }}
+>
+    Project Link 3
+  <span
+    style={{
+      fontWeight: '400',
+      fontSize: '14px',
+      color: '#6b7280',
+      marginLeft: '6px'
+    }}
+  >
+    (Optional)
+  </span>
+  </label>
+
+  <div style={{ position: 'relative' }}>
+    <span
+      style={{
+        position: 'absolute',
+        left: '14px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: '#9ca3af'
+      }}
+    >
+      🔗
+    </span>
 
     <input
-      style={inputStyle}
-      placeholder="Project Link 3"
+      type="text"
+      placeholder="https://app.colaberry.com/..."
       value={projectLink3}
       onChange={(e) => setProjectLink3(e.target.value)}
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        height: '48px',
+        paddingLeft: '42px',
+        border: '1px solid #dcdcde',
+        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+        borderRadius: '8px',
+        fontSize: '15px',
+        outline: 'none'
+      }}
     />
+  </div>
+</div>
+</div>
 {errorMessage && (
   <p
     style={{
@@ -418,12 +904,21 @@ function App() {
     {errorMessage}
   </p>
 )}
-    <div>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: '24px',
+        maxWidth: '850px',
+        margin: '24px auto 0 auto'
+      }}
+    >
       <button
         style={backButtonStyle}
         onClick={() => setCurrentStep(2)}
       >
-        Back
+       ← Back
       </button>
 
 <button
@@ -438,7 +933,7 @@ function App() {
     setCurrentStep(4);
   }}
 >
-  Review & Generate
+  Preview & Publish →
 </button>
     </div>
   </div>
@@ -446,29 +941,123 @@ function App() {
 
 {currentStep === 4 && (
   <div style={sectionStyle}>
-    <h2>Review & Generate</h2>
+    <div style={{ textAlign: 'left', marginBottom: '30px' }}>
 
-    <p style={{ color: '#666' }}>
-      Review your information before generating the portfolio.
-    </p>
+  <span
+    style={{
+      background: '#4f46e5',
+      color: 'white',
+      padding: '6px 12px',
+      borderRadius: '8px',
+      fontSize: '13px',
+      fontWeight: '700'
+    }}
+  >
+    STEP 4
+  </span>
+
+  <h2
+    style={{
+      marginTop: '18px',
+      marginBottom: '10px',
+      fontSize: '28px',
+      fontWeight: '700'
+    }}
+  >
+    Review & Generate ✨
+  </h2>
+
+  <p
+    style={{
+      color: '#64748b',
+      fontSize: '15px',
+      lineHeight: '1.6',
+      margin: 0
+    }}
+  >
+    Review your information and projects before generating your portfolio
+  </p>
+
+</div>
 <div
   style={{
-    background: '#f8fafc',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    padding: '18px',
-    margin: '18px auto 22px auto',
-    maxWidth: '520px',
-    textAlign: 'left',
-    lineHeight: '1.8'
-  }}>
-    <p><strong>Name:</strong> {fullName || 'Not provided'}</p>
-    <p><strong>Title:</strong> {professionalTitle || 'Not provided'}</p>
-    <p><strong>GitHub Username:</strong> {githubUsername || 'Not provided'}</p>
-    <p><strong>Repository:</strong> {repoName || 'Not provided'}</p>
-    <p><strong>Projects Selected:</strong>{' '}
-       {[projectLink1, projectLink2, projectLink3].filter(Boolean).length}</p>
-  </div> 
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '30px',
+    maxWidth: '850px',
+    margin: '20px auto'
+  }}
+>
+  <div
+    style={{
+      background: '#f8fafc',
+      border: '1px solid #e5e7eb',
+      borderRadius: '14px',
+      padding: '24px',
+      textAlign: 'left',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+    }}
+  >
+    <h3 style={{ marginTop: 0, marginBottom: '18px', color: '#111827' }}>
+  Your Information
+</h3>
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: '#374151' }}>
+  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+    <span>👤 Name</span>
+    <strong>{fullName || 'Not provided'}</strong>
+  </div>
+
+  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+    <span>💼 Title</span>
+    <strong>{professionalTitle || 'Not provided'}</strong>
+  </div>
+  
+  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+    <span>📧 Email</span>
+    <strong>{email || 'Not provided'}</strong>
+  </div>
+
+  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+    <span>🔗 LinkedIn</span>
+    <strong>{linkedinUrl || 'Not provided'}</strong>
+  </div>
+  
+  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+    <span>🐙 GitHub</span>
+    <strong>{githubUsername || 'Not provided'}</strong>
+  </div>
+
+  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
+    <span>📁 Repository</span>
+    <strong>{repoName || 'Not provided'}</strong>
+  </div>
+</div>
+  </div>
+
+  <div
+    style={{
+      background: '#f8fafc',
+      border: '1px solid #e5e7eb',
+      borderRadius: '14px',
+      padding: '24px',
+      textAlign: 'left',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+    }}
+  >
+    <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#111827' }}>
+      Selected Projects
+    </h3>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#374151' }}>
+      {[projectLink1, projectLink2, projectLink3]
+        .filter(Boolean)
+        .map((link, index) => (
+          <div key={index}>🔗 Project {index + 1}</div>
+        ))}
+    </div>
+  </div>
+</div>
 {statusMessage && (
   <div
     style={{
@@ -501,7 +1090,16 @@ function App() {
   </div>
 )}
 
-    <div>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: '24px',
+        maxWidth: '850px',
+        margin: '24px auto 0 auto'
+      }}
+    >
       <button
        style={{
          ...backButtonStyle,
@@ -511,7 +1109,7 @@ function App() {
        disabled={isGenerating || statusMessage.includes('Portfolio generated successfully')}
        onClick={() => setCurrentStep(3)}
       >
-       Back
+      ← Back
       </button>
 
       <button
@@ -527,7 +1125,7 @@ function App() {
           ? 'Portfolio Generated'
           : isGenerating
           ? 'Generating Portfolio...'
-          : 'Generate Portfolio'}
+          : 'Generate Portfolio🚀'}
       </button>
     </div>
   </div>

@@ -896,8 +896,8 @@ stepContent = stepContent
   businessImpact: []
 };
   allProjectsData.push(projectData);
-  console.log('\n--- Extracted Project Data ---');
-  console.log(JSON.stringify(projectData, null, 2));
+  //console.log('\n--- Extracted Project Data ---');
+ // console.log(JSON.stringify(projectData, null, 2));
 
   function generateProfessionalInsights(project) {
   const title = (project.title || '').toLowerCase();
@@ -1418,7 +1418,7 @@ function normalizeAIProjectContent(content) {
     portfolioSummary: content.portfolioSummary || '',
     summary:
      content.summary &&
-     !/user safety|safe/i.test(content.summary)
+     !/\buser safety\b|\bsafe\b/i.test(content.summary)
       ? content.summary
       : '',
     businessProblem: content.businessProblem || '',
@@ -1517,7 +1517,7 @@ const aiContent = normalizeAIProjectContent(JSON.parse(jsonText));
 if (
   !aiContent ||
   !aiContent.summary ||
-  /user safety|safe/i.test(aiContent.summary) ||
+  /\buser safety\b|\bsafe\b/i.test(aiContent.summary) ||
   !aiContent.businessProblem ||
   !Array.isArray(aiContent.objectives) ||
   aiContent.objectives.length === 0
