@@ -17,7 +17,7 @@ const rl = readline.createInterface({
 const allProjectsData = [];
 const links = [];
 const studentProfile = {};
-const MAX_LINKS = 3;
+const MAX_LINKS = 10;
 const MIN_LINKS = 1;
 
 console.log('GitHub config loaded:', {
@@ -526,11 +526,15 @@ let rawSummary = '';
 Create a GitHub portfolio project card summary.
 
 Requirements:
-- EXACTLY 1 sentences
-- Maximum 25 words total
+- EXACTLY 1 sentence
+- Maximum 25 words
 - Professional and recruiter-friendly
 - Business focused
 - Mention the main tool only if clearly present
+- Use strong action verbs such as:
+  Analyzed, Built, Developed, Created, Designed, Automated, Evaluated, Integrated
+- Vary the opening verb across projects
+- Do not start every summary with "Developed"
 - Do not use bullet points
 - Do not invent results or metrics
 - Return ONLY the summary text
@@ -728,7 +732,11 @@ ${allProjectsData.map((project, index) => `
 <tr>
 <td width="45%" align="center" valign="middle">
 
-<img src="${project.imageUrl || ''}" width="100%" height="220">
+<img src="${
+  project.imageUrl?.startsWith('./screenshots/')
+    ? `./project-${index + 1}/${project.imageUrl.replace('./', '')}`
+    : project.imageUrl || ''
+}" width="100%" height="220">
 
 </td>
 
@@ -737,7 +745,7 @@ ${allProjectsData.map((project, index) => `
 
 ## ${project.title}
 
-${project.portfolioContent?.portfolioSummary || homepageCardSummaries[index] || generateHomepageProjectSummary(project)}
+${homepageCardSummaries[index] || project.portfolioContent?.portfolioSummary || generateHomepageProjectSummary(project)}
 
  ${(project.portfolioContent?.tools || project.tags || [])
   .slice(0, 3)
@@ -789,6 +797,31 @@ ${[
   console.log("Browser workflow complete.");
 }
 
+async function getBestDashboardImage(page, projectUrl, deploymentLink, outputFolder) {
+  try {
+    await page.goto(projectUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000
+    });
+
+    await page.waitForTimeout(2000);
+
+    const projectImage =
+      (await page
+        .locator('div.col-sm-6.hidden-xs img')
+        .first()
+        .getAttribute('src')
+        .catch(() => null)) || '';
+
+    console.log('Selected first-page project image:', projectImage || 'none');
+
+    return projectImage;
+  } catch (error) {
+    console.log('First-page image selection failed:', error.message);
+    return '';
+  }
+}
+
 async function processSingleProject(page, projectUrl, projectNumber) {
   const outputFolder = `generated-portfolio/project-${projectNumber}`;
 
@@ -804,9 +837,47 @@ async function processSingleProject(page, projectUrl, projectNumber) {
     .map(tag => tag.trim())
     .filter(tag => tag !== '');
 
-  const projectImage = (await page.locator('div.col-sm-6.hidden-xs img').first().getAttribute('src')) || '';
-  const stepByStepLink = (await page.locator('a:has-text("Step By Step")').first().getAttribute('href')) || '';
-  const tasksLink = (await page.locator('a.btn.btn-primary').first().getAttribute('href')) || '';
+  const stepByStepLink =
+  (await page
+    .locator('a:has-text("Step By Step")')
+    .first()
+    .getAttribute('href')
+    .catch(() => null)) || '';
+
+// Find Deployment FIRST
+let deploymentHref =
+  (await page
+    .locator('a:has-text("Deployment")')
+    .first()
+    .getAttribute('href')
+    .catch(() => null)) || '';
+
+// Fallback to Launch Demo if Deployment doesn't exist
+if (!deploymentHref) {
+  deploymentHref =
+    (await page
+      .locator('a:has-text("Launch Demo")')
+      .first()
+      .getAttribute('href')
+      .catch(() => null)) || '';
+}
+
+console.log('Raw deployment href:', deploymentHref);
+
+// Convert #/network/... links to real URLs
+let deploymentLink = '';
+
+if (deploymentHref.startsWith('#/')) {
+  deploymentLink =
+    `https://app.colaberry.com/app/network${deploymentHref.substring(1)}`;
+} else {
+  deploymentLink = deploymentHref;
+}
+
+console.log('Deployment URL:', deploymentLink || 'none');
+
+const projectImage =
+  await getBestDashboardImage(page, projectUrl, deploymentLink, outputFolder);
 
   const stepUrl = projectUrl.replace('projectinstructions', 'projectsteps');
 
@@ -883,7 +954,7 @@ stepContent = stepContent
   tags,
   imageUrl: projectImage,
   stepByStepLink,
-  tasksLink,
+  deploymentLink,
   stepByStepContent,
   allStepDetails,
 
@@ -1457,7 +1528,7 @@ Return strict JSON only with this exact shape:
 {
   "category": "Specific project category, such as Retail Analytics, Healthcare Analytics, Telecom Analytics, Business Intelligence, SQL Analytics, Machine Learning, or Data Engineering",
   "industry": "Relevant industry or domain, such as Retail, Healthcare, Telecom, Finance, Public Safety, Aviation, or General Business",
-  "portfolioSummary": "Exactly 2 short recruiter-friendly sentences for the homepage project card",
+  "portfolioSummary": "Exactly 1 recruiter-friendly sentence, maximum 25 words",
   "summary": "2-3 sentence professional project summary",
   "businessProblem": "2-3 sentence business problem",
   "objectives": ["3 concise bullets"],
@@ -1638,8 +1709,12 @@ ${portfolioContent.businessImpact.map(item => `- ${item}`).join('\n')}
   fs.mkdirSync(`${outputFolder}/files`, { recursive: true });
 
   const localPreviewPath = `${outputFolder}/screenshots/preview.png`;
+  let readmeImagePath = projectData.imageUrl;
+
+if (projectData.imageUrl && projectData.imageUrl.startsWith('http')) {
   const savedPreviewImage = await downloadImage(projectData.imageUrl, localPreviewPath);
-  const readmeImagePath = savedPreviewImage ? './screenshots/preview.png' : projectData.imageUrl;
+  readmeImagePath = savedPreviewImage ? './screenshots/preview.png' : projectData.imageUrl;
+}
 
   const finalReadmeContent = readmeContent.replaceAll(projectData.imageUrl, readmeImagePath);
 

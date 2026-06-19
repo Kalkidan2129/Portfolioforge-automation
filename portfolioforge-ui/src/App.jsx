@@ -12,12 +12,15 @@ function App() {
   const [githubConnected, setGithubConnected] = useState(false);
   const [connectedUsername, setConnectedUsername] = useState('');
 
-  const [projectLink1, setProjectLink1] = useState('');
+  {/*const [projectLink1, setProjectLink1] = useState('');
   const [projectLink2, setProjectLink2] = useState('');
   const [projectLink3, setProjectLink3] = useState('');
   const [projectName1, setProjectName1] = useState('');
   const [projectName2, setProjectName2] = useState('');
-  const [projectName3, setProjectName3] = useState('');
+  const [projectName3, setProjectName3] = useState('');*/}
+  const [projectLinks, setProjectLinks] = useState(['']);
+  const MAX_PROJECT_LINKS = 10;
+
   const [statusMessage, setStatusMessage] = useState('Ready to generate your GitHub portfolio 🚀');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -45,10 +48,11 @@ function App() {
     githubUsername,
     repoName,
     
-    projectLinks: [projectLink1, projectLink2, projectLink3].filter(Boolean)
+    //projectLinks: [projectLink1, projectLink2, projectLink3].filter(Boolean)
+    projectLinks: projectLinks.filter(Boolean)
   };
 
-  if (!fullName || !githubUsername || !githubConnected || !repoName || !projectLink1) {
+  if (!fullName || !githubUsername || !githubConnected || !repoName || !projectLinks[0]) {
     setStatusMessage('Please enter your full name, connect GitHub, enter a repository name, and provide at least one project link.');
     return;
   }
@@ -309,7 +313,7 @@ function App() {
     color: '#111827'
   }}
 >
-  Full Name
+  Full Name <span style={{ color: 'red' }}>*</span>
 </label>
 
   <input
@@ -342,7 +346,7 @@ function App() {
       color: '#111827'
     }}
   >
-    Professional Title
+    Professional Title <span style={{ color: 'red' }}>*</span>
   </label>
 
   <input
@@ -586,7 +590,7 @@ function App() {
       color: '#111827'
     }}
   >
-    Portfolio Repository Name
+    Portfolio Repository Name <span style={{ color: 'red' }}>*</span>
   </label>
 
   <div style={{ position: 'relative' }}>
@@ -720,7 +724,7 @@ function App() {
       maxWidth: '500px'
     }}
   >
-      Add up to 3 project links and we’ll analyze them to build your portfolio
+      Add up to 10 project links and we’ll analyze them to build your portfolio
     </p>
   </div>
 
@@ -728,169 +732,82 @@ function App() {
 </div>
 <div style={{ width: '100%', margin: '0 auto' }}>
 
-    <div style={{ marginBottom: '18px' }}>
-  <label
-  style={{
-    display: 'block',
-    textAlign: 'left',
-    marginBottom: '10px',
-    fontWeight: '700',
-    fontSize: '18px',
-    letterSpacing: '-0.2px',
-    color: '#111827'
-  }}
->
-    Project Link 1
-  </label>
+  {projectLinks.map((link, index) => (
+    <div key={index} style={{ marginBottom: '18px' }}>
 
-  <div style={{ position: 'relative' }}>
-    <span
+      <label
+        style={{
+          display: 'block',
+          textAlign: 'left',
+          marginBottom: '10px',
+          fontWeight: '700',
+          fontSize: '18px',
+          color: '#111827'
+        }}
+      >
+        Project Link {index + 1}
+
+        {index === 0 ? (
+          <span style={{ color: 'red' }}> *</span>
+        ) : (
+          <span
+            style={{
+              fontWeight: '400',
+              fontSize: '14px',
+              color: '#6b7280',
+              marginLeft: '6px'
+            }}
+          >
+            (Optional)
+          </span>
+        )}
+      </label>
+
+      <input
+        type="text"
+        placeholder="https://app.colaberry.com/..."
+        value={link}
+        onChange={(e) => {
+          const updatedLinks = [...projectLinks];
+          updatedLinks[index] = e.target.value;
+          setProjectLinks(updatedLinks);
+        }}
+        style={{
+          width: '100%',
+          boxSizing: 'border-box',
+          height: '48px',
+          paddingLeft: '16px',
+          border: '1px solid #dcdcde',
+          boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+          borderRadius: '8px',
+          fontSize: '15px',
+          outline: 'none'
+        }}
+      />
+    </div>
+  ))}
+
+  {projectLinks.length < MAX_PROJECT_LINKS && (
+    <button
+      type="button"
+      onClick={() => {
+        setProjectLinks([...projectLinks, '']);
+      }}
       style={{
-        position: 'absolute',
-        left: '14px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        color: '#9ca3af'
+        padding: '10px 16px',
+        background: '#eef2ff',
+        color: '#2563eb',
+        border: '1px solid #c7d2fe',
+        borderRadius: '8px',
+        fontWeight: '700',
+        cursor: 'pointer',
+        marginBottom: '18px'
       }}
     >
-      🔗
-    </span>
+      + Add Project
+    </button>
+  )}
 
-    <input
-      type="text"
-      placeholder="https://app.colaberry.com/..."
-      value={projectLink1}
-      onChange={(e) => setProjectLink1(e.target.value)}
-      style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '42px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '8px',
-        fontSize: '15px',
-        outline: 'none'
-      }}
-    />
-  </div>
-</div>
-
-    <div style={{ marginBottom: '18px' }}>
-  <label
-  style={{
-    display: 'block',
-    textAlign: 'left',
-    marginBottom: '10px',
-    fontWeight: '700',
-    fontSize: '18px',
-    letterSpacing: '-0.2px',
-    color: '#111827'
-  }}
->
-    Project Link 2
-     <span
-    style={{
-      fontWeight: '400',
-      fontSize: '14px',
-      color: '#6b7280',
-      marginLeft: '6px'
-    }}
-  >
-    (Optional)
-  </span>
-  </label>
-
-  <div style={{ position: 'relative' }}>
-    <span
-      style={{
-        position: 'absolute',
-        left: '14px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        color: '#9ca3af'
-      }}
-    >
-      🔗
-    </span>
-
-    <input
-      type="text"
-      placeholder="https://app.colaberry.com/..."
-      value={projectLink2}
-      onChange={(e) => setProjectLink2(e.target.value)}
-      style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '42px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '8px',
-        fontSize: '15px',
-        outline: 'none'
-      }}
-    />
-  </div>
-</div>
-
-    <div style={{ marginBottom: '18px' }}>
-  <label
-  style={{
-    display: 'block',
-    textAlign: 'left',
-    marginBottom: '10px',
-    fontWeight: '700',
-    fontSize: '18px',
-    letterSpacing: '-0.2px',
-    color: '#111827'
-  }}
->
-    Project Link 3
-  <span
-    style={{
-      fontWeight: '400',
-      fontSize: '14px',
-      color: '#6b7280',
-      marginLeft: '6px'
-    }}
-  >
-    (Optional)
-  </span>
-  </label>
-
-  <div style={{ position: 'relative' }}>
-    <span
-      style={{
-        position: 'absolute',
-        left: '14px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        color: '#9ca3af'
-      }}
-    >
-      🔗
-    </span>
-
-    <input
-      type="text"
-      placeholder="https://app.colaberry.com/..."
-      value={projectLink3}
-      onChange={(e) => setProjectLink3(e.target.value)}
-      style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '42px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '8px',
-        fontSize: '15px',
-        outline: 'none'
-      }}
-    />
-  </div>
-</div>
 </div>
 {errorMessage && (
   <p
@@ -924,7 +841,7 @@ function App() {
 <button
   style={nextButtonStyle}
   onClick={() => {
-    if (!projectLink1) {
+    if (!projectLinks[0]) {
       setErrorMessage('Please enter at least one Colaberry project link.');
       return;
     }
@@ -1050,7 +967,7 @@ function App() {
     </h3>
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#374151' }}>
-      {[projectLink1, projectLink2, projectLink3]
+      {projectLinks
         .filter(Boolean)
         .map((link, index) => (
           <div key={index}>🔗 Project {index + 1}</div>
