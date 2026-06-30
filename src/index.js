@@ -69,6 +69,15 @@ async function createGitHubRepo() {
   }
 }
 
+function replaceSection(readme, sectionTitle, newContent) {
+  const regex = new RegExp(
+    `(## ${sectionTitle}\\n\\n)([\\s\\S]*?)(\\n\\n---|\\n\\n## )`,
+    'm'
+  );
+
+  return readme.replace(regex, `$1${newContent}$3`);
+}
+
 async function pushGeneratedPortfolioToGitHub() {
   const username = process.env.GITHUB_USERNAME;
   const token = process.env.GITHUB_TOKEN;
@@ -96,15 +105,241 @@ async function pushGeneratedPortfolioToGitHub() {
 
   console.log('Copying generated portfolio files...');
 
+  const portfolioMode = process.env.PORTFOLIO_MODE || 'create';
+
+if (portfolioMode === 'create') {
+  console.log('Create mode: replacing existing portfolio contents.');
+
   const items = fs.readdirSync(publishFolder);
 
   for (const item of items) {
-   if (item !== '.git') {
-    fs.rmSync(path.join(publishFolder, item), { recursive: true, force: true });
-  }
+    if (item !== '.git') {
+      fs.rmSync(path.join(publishFolder, item), {
+        recursive: true,
+        force: true
+      });
+    }
   }
 
   fs.cpSync(sourceFolder, publishFolder, { recursive: true });
+}
+
+if (portfolioMode === 'update') {
+  console.log('Update mode: preserving existing portfolio contents.');
+
+  const existingProjectTitles = new Set();
+
+  fs.readdirSync(publishFolder)
+    .filter(item => /^project-\d+$/.test(item))
+    .forEach(folder => {
+      const dataPath = path.join(publishFolder, folder, 'project-data.json');
+
+      if (fs.existsSync(dataPath)) {
+        const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+        if (data.title) {
+          existingProjectTitles.add(data.title.trim().toLowerCase());
+        }
+      }
+    });
+
+  const existingProjectNumbers = fs
+    .readdirSync(publishFolder)
+    .filter(item => /^project-\d+$/.test(item))
+    .map(item => Number(item.replace('project-', '')))
+    .filter(Number.isFinite);
+
+  let nextProjectNumber =
+    existingProjectNumbers.length > 0
+      ? Math.max(...existingProjectNumbers) + 1
+      : 1;
+
+  const addedProjects = [];
+
+  const generatedProjectFolders = fs
+    .readdirSync(sourceFolder)
+    .filter(item => /^project-\d+$/.test(item));
+
+  for (const folder of generatedProjectFolders) {
+    const generatedDataPath = path.join(sourceFolder, folder, 'project-data.json');
+
+    if (!fs.existsSync(generatedDataPath)) continue;
+
+    const generatedData = JSON.parse(fs.readFileSync(generatedDataPath, 'utf-8'));
+    const generatedTitle = generatedData.title?.trim().toLowerCase();
+
+    if (existingProjectTitles.has(generatedTitle)) {
+      console.log(`Skipped duplicate project: ${generatedData.title}`);
+      continue;
+    }
+
+    const targetProjectFolder = `project-${nextProjectNumber}`;
+
+    fs.cpSync(
+      path.join(sourceFolder, folder),
+      path.join(publishFolder, targetProjectFolder),
+      {
+        recursive: true,
+        force: true
+      }
+    );
+
+    addedProjects.push({
+      oldFolder: folder,
+      newFolder: targetProjectFolder,
+      title: generatedData.title
+    });
+
+    console.log(`Added ${targetProjectFolder}`);
+    nextProjectNumber++;
+  }
+
+  const existingReadmePath = path.join(publishFolder, 'README.md');
+  const newReadmePath = path.join(sourceFolder, 'README.md');
+if (!fs.existsSync(existingReadmePath) && fs.existsSync(newReadmePath)) {
+  fs.copyFileSync(newReadmePath, existingReadmePath);
+  console.log('Update mode: no existing README found, created README from generated portfolio.');
+}
+  if (fs.existsSync(existingReadmePath) && fs.existsSync(newReadmePath)) {
+    const existingReadme = fs.readFileSync(existingReadmePath, 'utf-8');
+    const newReadme = fs.readFileSync(newReadmePath, 'utf-8');
+
+    const newHeader = newReadme.split('## Projects')[0];
+    function mergeSkillsBadges(existingHeader, newHeader) {
+  const existingSkillsMatch = existingHeader.match(/## Skills & Tools\n\n([\s\S]*?)\n\n---/);
+  const newSkillsMatch = newHeader.match(/## Skills & Tools\n\n([\s\S]*?)\n\n---/);
+
+  const existingSkills = existingSkillsMatch ? existingSkillsMatch[1].trim() : '';
+  const newSkills = newSkillsMatch ? newSkillsMatch[1].trim() : '';
+
+  const allBadges = [...existingSkills.matchAll(/<img[^>]+alt="([^"]+)"[^>]*>/g)]
+    .concat([...newSkills.matchAll(/<img[^>]+alt="([^"]+)"[^>]*>/g)]);
+
+  const seen = new Set();
+  const mergedBadges = [];
+
+  for (const match of allBadges) {
+    const badge = match[0];
+    const skillName = match[1].toLowerCase().trim();
+
+    if (!seen.has(skillName)) {
+      seen.add(skillName);
+      mergedBadges.push(badge);
+    }
+  }
+
+  return existingHeader.replace(
+    /## Skills & Tools\n\n[\s\S]*?\n\n---/,
+    `## Skills & Tools\n\n${mergedBadges.join(' ')}\n\n---`
+  );
+}
+
+const existingHeader = existingReadme.split('## Projects')[0];
+const mergedHeader = mergeSkillsBadges(newHeader, existingHeader);
+
+const oldProjectsSection = existingReadme
+  .split('## Projects')[1]
+  ?.split('---\n\n## Contact')[0];
+
+const newContactSection = newReadme
+  .split('---\n\n## Contact')[1];
+
+let updatedReadme = existingReadme;
+
+//const existingHeader = existingReadme.split('## Projects')[0];
+
+if (existingHeader && oldProjectsSection && newContactSection) {
+  updatedReadme =
+    `${mergedHeader}## Projects\n\n${oldProjectsSection.trim()}\n\n---\n\n## Contact${newContactSection}`;
+}
+
+    const newProjectsSection = newReadme
+      .split('## Projects')[1]
+      ?.split('---\n\n## Contact')[0]
+      ?.trim();
+
+    if (addedProjects.length > 0) {
+  const cardsToAppend = addedProjects.map((project) => {
+  const dataPath = path.join(
+    publishFolder,
+    project.newFolder,
+    'project-data.json'
+  );
+
+  const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+
+  const tools = (
+    data.portfolioContent?.tools ||
+    data.tags ||
+    []
+  )
+    .slice(0, 3)
+    .map(tool => `<code>${tool.replace(/\s*\([^)]*\)/g, '')}</code>`)
+    .join(' ');
+
+  const imageSrc = data.imageUrl || '';
+
+  const summary =
+    data.portfolioContent?.portfolioSummary ||
+    data.portfolioContent?.summary ||
+    data.description ||
+    '';
+
+  return `
+<table>
+<tr>
+<td width="45%" align="center" valign="middle">
+
+<img src="${imageSrc}" width="100%" height="220">
+
+</td>
+
+<td width="55%" valign="top">
+
+## ${data.title}
+
+${summary}
+
+<br>
+
+${tools}
+
+<br>
+
+<p align="right">
+  <a href="./${project.newFolder}/README.md"><b>View Full Project →</b></a>
+</p>
+
+</td>
+</tr>
+</table>
+
+<br>
+`;
+});
+
+  const contactMarker = '\n---\n\n## Contact';
+const contactIndex = updatedReadme.lastIndexOf(contactMarker);
+
+if (contactIndex !== -1) {
+  updatedReadme =
+    updatedReadme.slice(0, contactIndex).trimEnd() +
+    '\n\n' +
+    cardsToAppend.join('\n') +
+    '\n' +
+    updatedReadme.slice(contactIndex);
+} else {
+  updatedReadme =
+    updatedReadme.trimEnd() +
+    '\n\n' +
+    cardsToAppend.join('\n') +
+    '\n\n---\n\n## Contact\n';
+}
+}
+
+    fs.writeFileSync(existingReadmePath, updatedReadme);
+    console.log('Update mode: profile updated and only new projects appended.');
+  }
+}
 
   const git = simpleGit(publishFolder);
 
@@ -231,15 +466,22 @@ async function collectStudentProfile() {
   studentProfile.email = uiRequest.email;
   studentProfile.githubUsername = uiRequest.githubUsername;
   studentProfile.repoName = uiRequest.repoName;
+  studentProfile.portfolioMode =
+  uiRequest.portfolioMode || 'create';
 
   process.env.GITHUB_USERNAME = uiRequest.githubUsername;
   
   process.env.GITHUB_REPO_NAME = uiRequest.repoName;
+  process.env.PORTFOLIO_MODE =
+  studentProfile.portfolioMode;
   process.env.OPENROUTER_API_KEY = uiRequest.openRouterApiKey;
 
   console.log('\nLoaded student profile from UI request.');
   console.log(`Student: ${studentProfile.fullName}`);
   console.log(`Portfolio repo: ${studentProfile.repoName}\n`);
+  console.log(
+  `Portfolio mode: ${studentProfile.portfolioMode}`
+  );
 
   return;
 }
@@ -742,12 +984,13 @@ ${allProjectsData.map((project, index) => `
 
 <td width="55%" valign="top">
 
-
 ## ${project.title}
 
 ${homepageCardSummaries[index] || project.portfolioContent?.portfolioSummary || generateHomepageProjectSummary(project)}
 
- ${(project.portfolioContent?.tools || project.tags || [])
+<br>
+
+${(project.portfolioContent?.tools || project.tags || [])
   .slice(0, 3)
   .map(tool => `<code>${tool.replace(/\s*\([^)]*\)/g, '')}</code>`)
   .join(' ')}

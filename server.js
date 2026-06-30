@@ -25,6 +25,8 @@ app.post('/generate-portfolio', async (req, res) => {
   console.log('Portfolio Request Received:');
   console.log(formData);
 
+  console.log('Portfolio mode:', formData.portfolioMode || 'create');
+  
   fs.writeFileSync(
     'ui-portfolio-request.json',
     JSON.stringify(formData, null, 2)

@@ -8,16 +8,11 @@ function App() {
   const [githubUsername, setGithubUsername] = useState('');
   const [githubToken, setGithubToken] = useState('');
   const [repoName, setRepoName] = useState('');
-  
+  const [portfolioMode, setPortfolioMode] = useState('create');
+
   const [githubConnected, setGithubConnected] = useState(false);
   const [connectedUsername, setConnectedUsername] = useState('');
 
-  {/*const [projectLink1, setProjectLink1] = useState('');
-  const [projectLink2, setProjectLink2] = useState('');
-  const [projectLink3, setProjectLink3] = useState('');
-  const [projectName1, setProjectName1] = useState('');
-  const [projectName2, setProjectName2] = useState('');
-  const [projectName3, setProjectName3] = useState('');*/}
   const [projectLinks, setProjectLinks] = useState(['']);
   const MAX_PROJECT_LINKS = 10;
 
@@ -47,8 +42,8 @@ function App() {
     email,
     githubUsername,
     repoName,
+    portfolioMode,
     
-    //projectLinks: [projectLink1, projectLink2, projectLink3].filter(Boolean)
     projectLinks: projectLinks.filter(Boolean)
   };
 
@@ -254,13 +249,6 @@ function App() {
   ))}
 </div>
 </div>
-
-
-        {/*<h1 style={{ fontSize: '52px', marginBottom: '10px', textAlign: 'center' }}>PortfolioForge AI</h1>
-        <p style={{ fontSize: '20px', color: '#555', textAlign: 'center', marginBottom: '32px' }}>
-          Generate professional GitHub portfolios from Colaberry projects.
-        </p>
-        */}
 
       {currentStep === 1 && (
         <div style={sectionStyle}>
@@ -633,6 +621,76 @@ function App() {
 >
   This repository will be created or updated with your generated portfolio.
 </p>
+
+<div style={{ marginTop: '20px' }}>
+  <label
+    style={{
+      display: 'block',
+      fontWeight: '700',
+      marginBottom: '12px'
+    }}
+  >
+    Portfolio Action <span style={{ color: 'red' }}>*</span>
+  </label>
+
+  <div
+    style={{
+      display: 'flex',
+      gap: '16px'
+    }}
+  >
+    <label
+      style={{
+        flex: 1,
+        border:
+          portfolioMode === 'create'
+            ? '2px solid #2563eb'
+            : '1px solid #d1d5db',
+        borderRadius: '10px',
+        padding: '16px',
+        cursor: 'pointer'
+      }}
+    >
+      <input
+        type="radio"
+        checked={portfolioMode === 'create'}
+        onChange={() => setPortfolioMode('create')}
+      />
+
+      <strong>Create New Portfolio</strong>
+
+      <p>
+        Generate a brand new portfolio and replace existing content.
+      </p>
+    </label>
+
+    <label
+      style={{
+        flex: 1,
+        border:
+          portfolioMode === 'update'
+            ? '2px solid #22c55e'
+            : '1px solid #d1d5db',
+        borderRadius: '10px',
+        padding: '16px',
+        cursor: 'pointer'
+      }}
+    >
+      <input
+        type="radio"
+        checked={portfolioMode === 'update'}
+        onChange={() => setPortfolioMode('update')}
+      />
+
+      <strong>Update Existing Portfolio</strong>
+
+      <p>
+        Keep existing projects and add new ones.
+      </p>
+    </label>
+  </div>
+</div>
+
 {errorMessage && (
   <p
     style={{
