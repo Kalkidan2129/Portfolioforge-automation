@@ -3,11 +3,23 @@ const express = require('express');
 const cors = require('cors');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const { chromium } = require('playwright');
+const sql = require('mssql');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+const sqlConfig = {
+  server: process.env.SQL_SERVER,
+  database: process.env.SQL_DATABASE,
+  user: process.env.SQL_USER,
+  password: process.env.SQL_PASSWORD,
+  options: {
+    encrypt: true,
+    trustServerCertificate: true
+  }
+};
 
 let portfolioStatus = {
   step: 'Idle',
@@ -20,13 +32,47 @@ app.get('/portfolio-status', (req, res) => {
 });
 
 app.post('/generate-portfolio', async (req, res) => {
-  const formData = req.body;
+  let formData = req.body;
+if ((!formData.projectLinks || formData.projectLinks.length === 0) && formData.userId) {
+  const pool = await sql.connect(sqlConfig);
+
+  const studentResult = await pool.request()
+    .input('userId', sql.Int, Number(formData.userId))
+    .query(`
+      SELECT UserID, FirstName, LastName, Email
+      FROM dbo.ADF_ColaberryActiveUsers
+      WHERE UserID = @userId
+    `);
+
+  const projectsResult = await pool.request()
+    .input('userId', sql.Int, Number(formData.userId))
+    .query(`
+      SELECT
+        p.UserID,
+        a.CAP_Launch_UploadLink
+      FROM dbo.ADF_CAP_Launch_Participants p
+      INNER JOIN dbo.ADF_CAP_Launch_Activity a
+        ON p.CAP_Launch_ParticipantID = a.CAP_Launch_ParticipantID
+      WHERE p.UserID = @userId
+        AND a.CAP_Launch_UploadLink LIKE '%/app/network/network/%'
+        AND a.CAP_Launch_UploadLink LIKE '%projectinstructions%'
+    `);
+
+  const student = studentResult.recordset[0];
+
+  formData = {
+    ...formData,
+    fullName: student ? `${student.FirstName} ${student.LastName}` : formData.fullName,
+    email: student?.Email || formData.email,
+    projectLinks: projectsResult.recordset.map(row => row.CAP_Launch_UploadLink)
+  };
+}  
 
   console.log('Portfolio Request Received:');
   console.log(formData);
 
   console.log('Portfolio mode:', formData.portfolioMode || 'create');
-  
+
   fs.writeFileSync(
     'ui-portfolio-request.json',
     JSON.stringify(formData, null, 2)
@@ -195,6 +241,388 @@ app.get('/auth/github/status', (req, res) => {
     connected: Boolean(githubOAuthToken && connectedGithubUser),
     username: connectedGithubUser
   });
+});
+
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request().query(`
+      SELECT TOP 1
+        UserID,
+        FirstName,
+        LastName,
+        Email
+      FROM dbo.ADF_ColaberryActiveUsers
+    `);
+
+    res.json({
+      connected: true,
+      sample: result.recordset[0]
+    });
+  } catch (error) {
+    console.error('Database test failed:', error.message);
+
+    res.status(500).json({
+      connected: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/student/:userId', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input('userId', sql.Int, Number(req.params.userId))
+      .query(`
+        SELECT
+          UserID,
+          FirstName,
+          LastName,
+          Email
+        FROM dbo.ADF_ColaberryActiveUsers
+        WHERE UserID = @userId
+      `);
+
+    res.json({
+      found: result.recordset.length > 0,
+      student: result.recordset[0] || null
+    });
+  } catch (error) {
+    res.status(500).json({
+      found: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/student/:userId/projects', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input('userId', sql.Int, Number(req.params.userId))
+      .query(`
+        SELECT
+            p.UserID,
+            a.CAP_Launch_UploadLink
+        FROM dbo.ADF_CAP_Launch_Participants p
+        INNER JOIN dbo.ADF_CAP_Launch_Activity a
+            ON p.CAP_Launch_ParticipantID = a.CAP_Launch_ParticipantID
+        WHERE p.UserID = @userId
+          AND a.CAP_Launch_UploadLink LIKE '%/app/network/network/%'
+          AND a.CAP_Launch_UploadLink LIKE '%projectinstructions%'
+      `);
+
+    const projects = result.recordset.map((row) => {
+  const match = row.CAP_Launch_UploadLink.match(/network\/(\d+)\/projectinstructions/);
+
+  return {
+    userId: row.UserID,
+    networkId: match ? match[1] : null,
+    projectLink: row.CAP_Launch_UploadLink
+  };
+});
+
+res.json({
+  totalProjects: projects.length,
+  projects
+});
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/student/:userId/portfolio-data', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+    const userId = Number(req.params.userId);
+
+    const studentResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT UserID, FirstName, LastName, Email
+        FROM dbo.ADF_ColaberryActiveUsers
+        WHERE UserID = @userId
+      `);
+
+    const projectsResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT
+          p.UserID,
+          a.CAP_Launch_UploadLink
+        FROM dbo.ADF_CAP_Launch_Participants p
+        INNER JOIN dbo.ADF_CAP_Launch_Activity a
+          ON p.CAP_Launch_ParticipantID = a.CAP_Launch_ParticipantID
+        WHERE p.UserID = @userId
+          AND a.CAP_Launch_UploadLink LIKE '%/app/network/network/%'
+          AND a.CAP_Launch_UploadLink LIKE '%projectinstructions%'
+      `);
+
+    const projects = projectsResult.recordset.map((row) => {
+      const match = row.CAP_Launch_UploadLink.match(/network\/(\d+)\/projectinstructions/);
+
+      return {
+        userId: row.UserID,
+        networkId: match ? match[1] : null,
+        projectLink: row.CAP_Launch_UploadLink
+      };
+    });
+
+    res.json({
+      student: studentResult.recordset[0] || null,
+      totalProjects: projects.length,
+      projects
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/student/by-email/:email', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request()
+      .input('email', sql.NVarChar, req.params.email)
+      .query(`
+        SELECT
+          UserID,
+          FirstName,
+          LastName,
+          Email
+        FROM dbo.ADF_ColaberryActiveUsers
+        WHERE Email = @email
+      `);
+
+    res.json({
+      found: result.recordset.length > 0,
+      student: result.recordset[0] || null
+    });
+  } catch (error) {
+    res.status(500).json({
+      found: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/student/by-email/:email/portfolio-data', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+    const email = req.params.email;
+
+    const studentResult = await pool.request()
+      .input('email', sql.NVarChar, email)
+      .query(`
+        SELECT UserID, FirstName, LastName, Email
+        FROM dbo.ADF_ColaberryActiveUsers
+        WHERE Email = @email
+      `);
+
+    const student = studentResult.recordset[0];
+
+    if (!student) {
+      return res.json({
+        found: false,
+        student: null,
+        totalProjects: 0,
+        projects: []
+      });
+    }
+
+    const projectsResult = await pool.request()
+      .input('userId', sql.Int, student.UserID)
+      .query(`
+        SELECT
+          p.UserID,
+          a.CAP_Launch_UploadLink
+        FROM dbo.ADF_CAP_Launch_Participants p
+        INNER JOIN dbo.ADF_CAP_Launch_Activity a
+          ON p.CAP_Launch_ParticipantID = a.CAP_Launch_ParticipantID
+        WHERE p.UserID = @userId
+          AND a.CAP_Launch_UploadLink LIKE '%/app/network/network/%'
+          AND a.CAP_Launch_UploadLink LIKE '%projectinstructions%'
+      `);
+
+    const projects = projectsResult.recordset.map((row) => {
+      const match = row.CAP_Launch_UploadLink.match(/network\/(\d+)\/projectinstructions/);
+
+      return {
+        userId: row.UserID,
+        networkId: match ? match[1] : null,
+        projectLink: row.CAP_Launch_UploadLink
+      };
+    });
+
+    res.json({
+      found: true,
+      student,
+      totalProjects: projects.length,
+      projects
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      found: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/colaberry/load-portfolio-data', async (req, res) => {
+  let browser;
+
+  try {
+    browser = await chromium.launch({ headless: false });
+    const page = await browser.newPage();
+
+    await page.goto('https://app.colaberry.com');
+
+    await page.waitForURL(/\/(dashboard|home|app|profile|portal).*/i, {
+      timeout: 0
+    });
+
+    const cookies = await page.context().cookies();
+
+    const myEmailCookie = cookies.find(
+      cookie => cookie.name === 'myEmail' && cookie.domain.includes('colaberry.com')
+    );
+
+    const loggedInEmail = myEmailCookie?.value || '';
+
+    if (!loggedInEmail) {
+      await browser.close();
+
+      return res.status(404).json({
+        found: false,
+        error: 'Could not detect logged-in Colaberry email.'
+      });
+    }
+
+    const pool = await sql.connect(sqlConfig);
+
+    const studentResult = await pool.request()
+      .input('email', sql.NVarChar, loggedInEmail)
+      .query(`
+        SELECT UserID, FirstName, LastName, Email
+        FROM dbo.ADF_ColaberryActiveUsers
+        WHERE Email = @email
+      `);
+
+    const student = studentResult.recordset[0];
+
+    if (!student) {
+      await browser.close();
+
+      return res.json({
+        found: false,
+        email: loggedInEmail,
+        student: null,
+        totalProjects: 0,
+        projects: []
+      });
+    }
+
+    const projectsResult = await pool.request()
+      .input('userId', sql.Int, student.UserID)
+      .query(`
+        SELECT
+          p.UserID,
+          a.CAP_Launch_UploadLink
+        FROM dbo.ADF_CAP_Launch_Participants p
+        INNER JOIN dbo.ADF_CAP_Launch_Activity a
+          ON p.CAP_Launch_ParticipantID = a.CAP_Launch_ParticipantID
+        WHERE p.UserID = @userId
+          AND a.CAP_Launch_UploadLink LIKE '%/app/network/network/%'
+          AND a.CAP_Launch_UploadLink LIKE '%projectinstructions%'
+      `);
+
+    const projectRows = projectsResult.recordset.map((row) => {
+  const match = row.CAP_Launch_UploadLink.match(/network\/(\d+)\/projectinstructions/);
+
+  return {
+    userId: row.UserID,
+    networkId: match ? Number(match[1]) : null,
+    projectLink: row.CAP_Launch_UploadLink
+  };
+});
+
+const networkIds = projectRows
+  .map(project => project.networkId)
+  .filter(Boolean);
+
+let metadataRows = [];
+
+if (networkIds.length > 0) {
+  const metadataRequest = pool.request();
+
+  networkIds.forEach((id, index) => {
+    metadataRequest.input(`projectId${index}`, sql.Int, id);
+  });
+
+  const idParams = networkIds
+    .map((_, index) => `@projectId${index}`)
+    .join(',');
+
+  const metadataResult = await metadataRequest.query(`
+    SELECT
+      projectID,
+      ProjectName,
+      ProjectSummary,
+      ProjectVisual
+    FROM dbo.ADF_Proj_Deployed
+    WHERE projectID IN (${idParams})
+  `);
+
+  metadataRows = metadataResult.recordset;
+}
+
+const projects = projectRows.map((project) => {
+  const metadata = metadataRows.find(
+    row => Number(row.projectID) === Number(project.networkId)
+  );
+
+  return {
+    userId: project.userId,
+    networkId: project.networkId,
+    projectLink: project.projectLink,
+    title: metadata?.ProjectName || `Colaberry Project ${project.networkId}`,
+    summary: metadata?.ProjectSummary || '',
+    imageUrl: metadata?.ProjectVisual || ''
+  };
+});
+
+    await page.context().storageState({
+      path: 'colaberry-storage-state.json'
+    });
+    await browser.close();
+
+    res.json({
+      found: true,
+      student,
+      totalProjects: projects.length,
+      projects
+    });
+
+  } catch (error) {
+    if (browser) {
+      await browser.close();
+    }
+
+    res.status(500).json({
+      found: false,
+      error: error.message
+    });
+  }
 });
 
 app.listen(3001, () => {

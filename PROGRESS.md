@@ -4,21 +4,25 @@
 
 **Project Name:** PortfolioForge AI
 
-PortfolioForge AI automates the process of converting completed Colaberry projects into professional GitHub portfolio repositories. The system extracts project information from authenticated Colaberry project pages, generates recruiter-focused documentation using AI, creates a structured portfolio repository, and publishes the portfolio to the student's GitHub account through GitHub OAuth authorization.
+PortfolioForge AI automates the process of converting completed Colaberry projects into professional GitHub portfolio repositories. The platform extracts project information from authenticated Colaberry projects, generates recruiter-focused documentation using AI, creates a structured GitHub portfolio repository, and publishes or updates the portfolio through GitHub OAuth authorization.
 
-The platform supports both initial portfolio generation and repository update workflows, allowing students to continuously expand existing portfolio repositories with new projects while preserving previously generated portfolio content.
+The platform currently supports both initial portfolio generation and repository update workflows. Current development is focused on integrating the Colaberry SQL Server database to automate student profile retrieval and project selection, replacing manual project link submission while preserving the existing extraction, AI documentation generation, and GitHub publishing workflows.
 
 ---
 
 # Current Repository Phase
 
-**Phase:** MVP Complete – Repository Update Workflow Stabilization
+**Phase:** Database-Driven Portfolio Generation & Workflow Integration
 
-**Repository Status:** Tested
+**Repository Status:** Integrated and Verified
 
-The core MVP workflow is fully operational and supports end-to-end portfolio generation from Colaberry project links to published GitHub repositories.
+The core MVP workflow is complete and fully operational.
 
-Current development focuses on update workflow hardening, duplicate project handling, existing-project update support, dashboard image selection reliability, and overall platform refinement.
+PortfolioForge AI now supports an end-to-end database-driven workflow that automatically identifies the authenticated Colaberry student, retrieves profile information and available projects from SQL Server, allows project selection through the PortfolioForge UI, and generates or updates a professional GitHub portfolio repository.
+
+The previous manual project-link submission workflow has been replaced with automatic project retrieval while preserving the existing Playwright extraction, AI documentation generation, and GitHub publishing pipeline.
+
+Current development is focused on workflow refinement, UI improvements, project-selection enhancements, and production readiness.
 
 ---
 
@@ -33,7 +37,8 @@ Components:
 * React-based Portfolio Generation Wizard
 * Student Information workflow
 * GitHub OAuth connection workflow
-* Dynamic project link submission workflow
+* Database-driven project loading workflow
+* Interactive project selection workflow
 * Portfolio review and generation workflow
 * Portfolio mode selection (Create / Update)
 
@@ -101,11 +106,41 @@ Authentication Model:
 
 Capabilities:
 
-* Project summary generation
+* AI-generated project summaries
 * Recruiter-focused project descriptions
-* README generation
-* Portfolio content structuring
+* Project README generation
+* Portfolio README generation
 * Portfolio card generation
+* Portfolio content structuring
+
+---
+
+## Database Integration
+
+**Status:** Verified
+
+Technology:
+
+* Microsoft SQL Server
+* Read-only database access
+
+Confirmed Data Sources:
+
+* Student profile information
+* Student-to-project mapping
+* Project instruction links
+* Project titles
+* Project categories
+* Project summaries
+* Project preview images
+
+Current Strategy:
+
+* Replace manual project link submission with database-driven project selection.
+* Continue using Playwright for authenticated project extraction.
+* Preserve the existing AI documentation generation workflow.
+* Continue using GitHub OAuth for repository publishing.
+* Keep GitHub username and LinkedIn URL as user-entered fields.
 
 ---
 
@@ -181,7 +216,7 @@ Completed:
 
 ## Milestone 6 — Portfolio Update Workflow
 
-**Status:** Partially Implemented
+**Status:** Verified
 
 Completed:
 
@@ -194,38 +229,115 @@ Completed:
 * README merge logic stabilization
 * Projects section formatting correction
 * Duplicate Contact section prevention
-* Consistent project card rendering between Create and Update modes
-* Project insertion point correction during updates
-
-In Progress:
-
-* Duplicate project prevention
-* Existing project update logic
-* Dashboard image selection refinement
+* Consistent project card rendering
+* Project insertion point correction
+* Existing portfolio update support
 
 ---
 
-## Milestone 7 — Update Workflow Stabilization
+## Milestone 7 — Repository Update Stabilization
 
 **Status:** Verified
 
 Completed:
 
-* README merge correction
-* Project append workflow validation
+* README merge validation
+* Project append workflow
 * Contact section preservation
-* Project card rendering consistency
 * Existing project preservation
-* Update-mode GitHub rendering validation
+* Repository update validation
+* Multi-project update testing
+* UI consistency improvements
 
 ---
+
+## Milestone 8 — Database Integration
+
+**Status:** Verified
+
+Completed:
+
+* Implemented read-only SQL Server integration.
+* Implemented automatic student lookup using authenticated Colaberry sessions.
+* Retrieved student profile information directly from the database.
+* Retrieved project instruction links from SQL Server.
+* Retrieved project titles.
+* Retrieved project summaries.
+* Retrieved project preview images.
+* Retrieved project metadata required for portfolio generation.
+* Implemented automatic profile loading within PortfolioForge.
+* Eliminated manual project-link entry.
+* Implemented database-driven project loading and review interface.
+* Integrated interactive project selection using project checkboxes.
+* Successfully validated end-to-end database retrieval.
+
+Validation:
+
+* Successfully loaded authenticated student profile.
+* Successfully loaded project metadata.
+* Successfully loaded preview images.
+* Successfully generated portfolios using database-driven project selection.
+
+### Milestone 9 — Automatic Student Identification
+
+**Status:** Completed
+
+Completed:
+
+- Implemented automatic student identification using the authenticated Colaberry session.
+- Successfully detected the logged-in student's email from the Colaberry authentication cookie.
+- Implemented automatic student lookup using email.
+- Retrieved the corresponding UserID from SQL Server.
+- Retrieved project instruction links automatically for the authenticated student.
+- Validated the complete flow from Colaberry authentication to database-driven project retrieval.
+- Confirmed that manual UserID entry is no longer required for future PortfolioForge workflows.
+
+## Milestone 10 — PortfolioForge Workflow Redesign
+
+**Status:** Verified
+
+Completed:
+
+* Redesigned the PortfolioForge workflow into a four-step guided wizard.
+* Introduced automatic Colaberry profile loading as the first workflow step.
+* Added editable student profile fields.
+* Added required field validation.
+* Added repository creation/update workflow improvements.
+* Added repository mode selection.
+* Added review and generation page redesign.
+* Improved responsive UI layout.
+* Improved project review cards.
+* Added duplicate repository protection during update mode.
+* Improved form validation and required field indicators.
+* Improved input styling and focus states.
+* Improved overall PortfolioForge branding and user experience.
+
+## Milestone 11 — Interactive Project Selection
+
+**Status:** Verified for single-project flow
+
+Completed:
+
+* Implemented interactive project checkboxes in the PortfolioForge UI.
+* Added selected project state management.
+* Automatically selects loaded Colaberry projects by default.
+* Allows students to deselect projects before generation.
+* Prevents users from continuing without selecting at least one project.
+* Sends only selected project links to the backend generation workflow.
+* Validated selected project link appears in the backend terminal output.
+
+Validation:
+
+* Single-project selection tested successfully.
+* Empty selection validation tested successfully.
+* Multi-project selection logic implemented, but multi-project account testing is pending.
 
 # Validation Evidence
 
 Verified Through Testing:
 
-* Single-project generation
-* Multi-project generation
+* Single-project portfolio generation
+* Multi-project portfolio generation
 * Dynamic project link submission
 * GitHub OAuth authentication
 * GitHub repository creation
@@ -234,13 +346,26 @@ Verified Through Testing:
 * Repository update publishing
 * Colaberry authentication
 * Project extraction
-* README generation
+* AI-generated README creation
 * Frontend-backend integration
 * README merge validation
 * Project card rendering validation
 * Contact section preservation validation
 * Existing project preservation during updates
-
+* SQL Server database connectivity
+* Student profile data validation
+* Project data source validation
+* Project instruction link discovery
+* Database architecture validation
+* Automatic student identification
+* SQL Server profile retrieval
+* SQL Server project retrieval
+* Automatic project selection workflow
+* Repository update duplicate prevention
+* Profile auto-population
+* Four-step wizard validation
+* End-to-end portfolio generation validation
+* Update-mode validation
 ---
 
 # Known Limitations
@@ -277,25 +402,20 @@ Some deployment pages require additional authentication or render differently ac
 
 Result:
 
-Dashboard screenshots are not consistently available for all projects.
+Dashboard screenshots are not consistently available for all project types.
 
 ---
 
-## Portfolio Update Workflow
+## Database Integration
 
-**Status:** Tested
+**Status:** Initial Discovery Complete
 
-Outstanding Work:
+Current Limitations:
 
-* Duplicate project prevention validation
-* Existing project replacement/update logic
-* Update conflict handling
-
-Current Issues:
-
-* Duplicate projects can still be created during updates under some scenarios.
-* Existing project updates are not fully supported.
-* Dashboard image selection remains inconsistent across project types.
+* Multi-project selection has been implemented but is currently validated only with a single-project account.
+* Project filtering by category has not yet been implemented.
+* Some deployed projects still expose inconsistent preview images.
+* Additional metadata may be unavailable for older Colaberry projects.
 
 ---
 
@@ -303,7 +423,7 @@ Current Issues:
 
 **Status:** Planned
 
-Not included in MVP.
+Not included in the current implementation.
 
 ---
 
@@ -311,17 +431,18 @@ Not included in MVP.
 
 **Status:** Planned
 
-Not included in MVP.
+Not included in the current implementation.
 
 ---
 
 # Current Risks
 
-1. Colaberry page structure changes may affect extraction.
-2. Dashboard image extraction remains the least stable component.
-3. Some project assets may not be available across all project types.
-4. Existing project replacement logic is not yet implemented.
-5. Duplicate project detection is not yet fully verified.
+1. Colaberry page structure changes may affect Playwright extraction.
+2. Dashboard image extraction remains the least deterministic component.
+3. Some project metadata is distributed across multiple SQL Server tables.
+4. Database relationships may vary between different project types.
+5. Future database schema changes may require updates to SQL queries.
+6. Existing project update replacement logic is still under development.
 
 ---
 
@@ -329,61 +450,79 @@ Not included in MVP.
 
 ## High Priority
 
-* Complete duplicate project detection validation.
-* Implement existing project replacement/update support.
+* Validate multi-project selection using accounts with multiple projects.
+* Improve project filtering and search.
+* Add generation progress indicator.
 * Improve dashboard image selection reliability.
-* Standardize image extraction rules across project types.
-* Add update workflow regression testing.
+* Expand automated testing coverage.
 
 ---
 
 ## Medium Priority
 
 * Improve portfolio visual presentation.
-* Improve update workflow user experience.
 * Enhance project asset organization.
-* Expand repository update validation coverage.
+* Expand update workflow validation.
+* Improve project metadata retrieval from SQL Server.
 
 ---
 
 ## Future Enhancements
 
 * GitHub Pages publishing.
-* Portfolio customization options.
+* Portfolio customization.
+* AI portfolio recommendations.
+* Portfolio themes.
 * Additional publishing destinations.
-* Enhanced AI recommendations.
-* Portfolio themes and templates.
+* Advanced project filtering.
+* Automatic project synchronization from Colaberry.
 
 ---
 
 # Repository Maturity Assessment
 
-| Component                    | Status                |
-| ---------------------------- | --------------------- |
-| React UI                     | Verified              |
-| Backend API                  | Verified              |
-| Playwright Automation        | Verified              |
-| Project Extraction           | Verified              |
-| AI Content Generation        | Verified              |
-| GitHub OAuth                 | Verified              |
-| GitHub Publishing            | Verified              |
-| Multi-Project Support        | Verified              |
-| Dynamic Project Input        | Verified              |
-| Repository Update Workflow   | Verified              |
-| README Merge Logic           | Verified              |
-| Project Card Rendering       | Verified              |
-| Existing Project Updates     | Partially Implemented |
-| Duplicate Project Prevention | Partially Implemented |
-| Dashboard Image Selection    | Partially Implemented |
-| GitHub Pages                 | Planned               |
-| Portfolio Customization      | Planned               |
+| Component | Status |
+|----------------------------|----------------------|
+| React UI | Verified |
+| Backend API | Verified |
+| Playwright Automation | Verified |
+| Project Extraction | Verified |
+| AI Content Generation | Verified |
+| GitHub OAuth | Verified |
+| GitHub Publishing | Verified |
+| Multi-Project Support | Verified |
+| Dynamic Project Input | Verified |
+| Repository Update Workflow | Verified |
+| README Merge Logic | Verified |
+| Project Card Rendering | Verified |
+| SQL Server Discovery | Verified |
+| Database Integration | Verified |
+| Student Profile Retrieval | Verified |
+| Automatic Project Retrieval | Verified |
+| Four-Step Wizard | Verified |
+| Existing Project Updates | Verified |
+| Duplicate Project Prevention | Verified |
+| Dashboard Image Selection | Partially Implemented |
+| GitHub Pages | Planned |
+| Portfolio Customization | Planned |
+| Interactive Project Selection | Verified (Single-Project) |
 
 ---
 
 # Overall Project Status
 
-PortfolioForge AI MVP is complete and operational.
+PortfolioForge AI has successfully completed its MVP and database-driven workflow implementation.
 
-The platform successfully converts authenticated Colaberry projects into professional GitHub portfolio repositories using AI-generated documentation, Playwright-based extraction, GitHub OAuth authentication, and automated repository publishing.
+The application now provides a complete end-to-end experience that:
 
-The repository update workflow has been integrated, tested, and stabilized. Current development is focused on duplicate-project handling, existing-project update support, dashboard image selection reliability, and overall platform hardening rather than core functionality.
+* Authenticates the student through Colaberry.
+* Automatically retrieves the authenticated student's profile.
+* Automatically retrieves available projects from SQL Server.
+* Allows students to review and edit their portfolio information.
+* Supports creating or updating existing GitHub repositories.
+* Uses Playwright to extract project content.
+* Uses AI to generate recruiter-focused documentation.
+* Publishes or updates professional GitHub portfolio repositories.
+* Prevents duplicate project creation during repository updates.
+
+The remaining work focuses on production-readiness improvements, including project filtering, enhanced UI feedback, expanded automated testing, and workflow refinements.

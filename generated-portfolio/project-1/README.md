@@ -1,52 +1,53 @@
 
-# Walmart Store Sales
+# Revenue Forecasting and Performance Analysis of Vodafone Qatar (2021–2023)
 
 ## Project Overview
 
-This project involved creating a comprehensive Power BI dashboard to analyze sales data from 45 Walmart stores across the US between 2010 and 2012. It focused on visualizing year-over-year sales performance and identifying key factors impacting sales during the post-recession period. The dashboard incorporated DAX measures, calendar tables, and conditional columns to enhance data insights.
+This project transformed Vodafone Qatar’s raw telecom data into a consolidated, machine learning-ready dataset using NexusMax, Python, and Microsoft Fabric. It enabled advanced revenue forecasting, churn analysis, and performance tracking through interactive dashboards, supporting data-driven decisions for finance and strategy teams.
 
 ---
 
 ## Business Problem
 
-Walmart stores faced fluctuating sales during the recovery period following the 2008 recession, impacting revenue and operational planning. Understanding sales trends and external factors was critical to optimize store performance and strategic decision-making.
+Telecom revenue performance varied significantly across regions and segments, with unclear visibility on growth and risk areas. Fluctuations in churn and subscriber behavior created forecasting uncertainty, hindering confident budget planning and strategic decision-making.
 
 ---
 
 ## Objective
 
-- Analyze year-over-year sales trends across multiple Walmart stores
-- Incorporate external factors like holidays and unemployment rates into sales analysis
-- Develop an interactive Power BI dashboard for data-driven insights
+- Create a unified, clean dataset integrating revenue, churn, and subscriber metrics
+- Improve quarterly revenue forecast accuracy to optimize budget allocation
+- Reduce churn in key telecom segments to protect recurring revenue
 
 ---
 
 ## Tools & Technologies
 
-- Power BI Desktop
-- DAX (Data Analysis Expressions)
-- Power Query Editor
-- Excel (for initial data handling)
-- CSV data files
+- NexusMax
+- Python
+- Microsoft Fabric
+- Power BI
+- NumPy
+- Pandas
 
 ---
 
 ## Project Workflow
 
-- Import Walmart sales CSV data into Power BI Desktop
-- Create calendar and refresh date tables using DAX
-- Establish relationships between sales and calendar tables
-- Add conditional columns for holidays and unemployment rates
-- Develop DAX measures for sales aggregation and year-over-year comparisons
+- Data extraction and cleaning from Vodafone Qatar telecom datasets
+- Data transformation and feature engineering using Python and NexusMax
+- Creation of a centralized date table for time-based analysis
+- Development of supervised regression models for revenue forecasting
+- Visualization of KPIs and trends in Power BI dashboards for stakeholder insights
 
 ---
 
 ## Key Insights
 
-- Sales trends showed variability influenced by holiday weeks and unemployment rates
-- Year-over-year sales comparisons highlighted recovery patterns post-recession
-- Custom sorting of time and conditional columns improved dashboard clarity
-- DAX measures enabled precise calculation of average and total sales metrics
+- Total revenue increased 14% quarter-over-quarter, driven primarily by Doha region
+- Churn rate among high-value prepaid customers rose by 0.3% QoQ, impacting revenue stability
+- Network availability maintained a high score of 99.95%, supporting customer retention efforts
+- Churn in Mobile Postpaid and Fixed Broadband segments exceeded overall churn, risking $8–12K annual revenue loss
 
 ---
 
@@ -58,9 +59,9 @@ Walmart stores faced fluctuating sales during the recovery period following the 
 
 ## Business Impact
 
-- Enabled Walmart to monitor sales recovery trends effectively
-- Provided actionable insights for strategic planning during economic recovery
-- Improved decision-making through interactive and detailed sales dashboards
+- Enhanced forecasting accuracy enabled optimized investment in high-growth segments
+- Unified analytics platform reduced manual effort and improved decision-making speed
+- Identification of churn risk areas supported targeted retention strategies, protecting revenue
 
 ---
 

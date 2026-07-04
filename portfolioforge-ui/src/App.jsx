@@ -14,6 +14,11 @@ function App() {
   const [connectedUsername, setConnectedUsername] = useState('');
 
   const [projectLinks, setProjectLinks] = useState(['']);
+  const [loadedStudent, setLoadedStudent] = useState(null);
+  const [loadedProjects, setLoadedProjects] = useState([]);
+  const [selectedProjectLinks, setSelectedProjectLinks] = useState([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  
   const MAX_PROJECT_LINKS = 10;
 
   const [statusMessage, setStatusMessage] = useState('Ready to generate your GitHub portfolio 🚀');
@@ -44,11 +49,11 @@ function App() {
     repoName,
     portfolioMode,
     
-    projectLinks: projectLinks.filter(Boolean)
+    projectLinks: selectedProjectLinks.filter(Boolean)
   };
 
-  if (!fullName || !githubUsername || !githubConnected || !repoName || !projectLinks[0]) {
-    setStatusMessage('Please enter your full name, connect GitHub, enter a repository name, and provide at least one project link.');
+  if (!githubUsername || !githubConnected || !repoName) {
+    setStatusMessage('Please connect GitHub and enter a repository name.');
     return;
   }
 
@@ -93,14 +98,27 @@ function App() {
   } 
 }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '12px',
-    marginBottom: '14px',
-    border: '1px solid #ccc',
-    borderRadius: '8px',
-    fontSize: '16px'
-  };
+const inputStyle = {
+  width: '100%',
+  height: '52px',
+  padding: '0 16px',
+  fontSize: '15px',
+  color: '#111827',
+
+  border: '1px solid #d1d5db',
+
+  borderRadius: '10px',
+
+  background: '#ffffff',
+
+  boxSizing: 'border-box',
+
+  transition: 'all .2s ease',
+
+  outline: 'none',
+
+  boxShadow: '0 1px 3px rgba(0,0,0,.04)'
+};
 
   const sectionStyle = {
     background: '#ffffff',
@@ -129,6 +147,16 @@ function App() {
     fontSize: '16px',
     cursor: 'pointer',
     marginRight: '12px'
+  };
+
+  const handleInputFocus = (e) => {
+    e.target.style.border = '1px solid #4f46e5';
+    e.target.style.boxShadow = '0 0 0 4px rgba(79,70,229,.15)';
+  };
+
+  const handleInputBlur = (e) => {
+    e.target.style.border = '1px solid #d1d5db';
+    e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)';
   };
 
   return (
@@ -251,468 +279,492 @@ function App() {
 </div>
 
       {currentStep === 1 && (
-        <div style={sectionStyle}>
-<div style={{ textAlign: 'left', marginBottom: '30px' }}>
-  <span
-    style={{
-      background: '#4f46e5',
-      color: 'white',
-      padding: '6px 12px',
-      borderRadius: '8px',
-      fontSize: '13px',
-      fontWeight: '700'
-    }}
-  >
+  <div style={sectionStyle}>
+    <div style={{ textAlign: 'left', marginBottom: '30px' }}>
+      <span style={{
+        background: '#4f46e5',
+        color: 'white',
+        padding: '6px 12px',
+        borderRadius: '8px',
+        fontSize: '13px',
+        fontWeight: '700'
+      }}>
+        STEP 1
+      </span>
 
-    
-    STEP 1
-  </span>
+      <h2 style={{ marginTop: '18px', marginBottom: '10px', fontSize: '28px', fontWeight: '700' }}>
+        Connect Colaberry Account 👋
+      </h2>
 
-  <h2
-    style={{
-      marginTop: '18px',
-      marginBottom: '10px',
-      fontSize: '28px',
-      fontWeight: '700'
-    }}
-  >
-    Tell us about yourself 👋
-  </h2>
+      <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.6' }}>
+        Log into Colaberry so PortfolioForge can load your profile and projects automatically.
+      </p>
+    </div>
 
-  <p
-    style={{
-      color: '#64748b',
-      fontSize: '15px',
-      lineHeight: '1.6',
-      margin: 0
-    }}
-  >
-    This information will appear on your generated portfolio
-  </p>
-</div>
-          <div style={{ marginBottom: '18px' }}>
-  <label
+  {!loadedStudent && (
+    <button
+      style={{ ...nextButtonStyle, marginBottom: '20px' }}
+      disabled={isLoadingProjects}
+      onClick={async () => {
+        setIsLoadingProjects(true);
+        setErrorMessage('');
+
+        try {
+          const response = await fetch('http://localhost:3001/api/colaberry/load-portfolio-data');
+          const data = await response.json();
+
+          if (!data.found) {
+            setErrorMessage('Could not load your Colaberry profile.');
+            return;
+          }
+
+          setLoadedStudent(data.student);
+          const loadedProjectLinks = (data.projects || []).map(project => project.projectLink);
+
+          setLoadedProjects(data.projects || []);
+          setSelectedProjectLinks(loadedProjectLinks);
+
+          setFullName(`${data.student.FirstName} ${data.student.LastName}`);
+          setEmail(data.student.Email);
+          setProjectLinks(loadedProjectLinks);
+        } catch (error) {
+          console.error(error);
+          setErrorMessage('Failed to connect to Colaberry.');
+        } finally {
+          setIsLoadingProjects(false);
+        }
+      }}
+    >
+      {isLoadingProjects ? 'Loading Colaberry Data...' : 'Connect Colaberry'}
+    </button>
+  )}
+  
+    {loadedStudent && (
+      <>
+        <div style={{
+          background: '#ecfdf5',
+          border: '1px solid #86efac',
+          color: '#166534',
+          padding: '14px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontWeight: '600'
+        }}>
+          ✅ Colaberry profile loaded: {loadedStudent.FirstName} {loadedStudent.LastName}
+          <br />
+          Projects found: {loadedProjects.length}
+        </div>
+
+        <label
+          style={{
+            display: 'block',
+            textAlign: 'left',
+            marginBottom: '8px',
+            marginTop: '18px',
+            fontWeight: '700',
+            fontSize: '16px',
+            color: '#111827'
+          }}
+         >
+           Full Name <span style={{ color: '#dc2626' }}>*</span>
+        </label>
+       <input
+  value={fullName}
+  onChange={(e) => setFullName(e.target.value)}
+  style={inputStyle}
+  onFocus={(e) => {
+    e.target.style.border = '1px solid #4f46e5';
+    e.target.style.boxShadow = '0 0 0 4px rgba(79,70,229,.15)';
+  }}
+  onBlur={(e) => {
+    e.target.style.border = '1px solid #d1d5db';
+    e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)';
+  }}
+/>
+
+        <label
+          style={{
+          display: 'block',
+          textAlign: 'left',
+          marginBottom: '8px',
+          marginTop: '18px',
+          fontWeight: '700',
+          fontSize: '16px',
+          color: '#111827'
+        }}
+       >
+         Email <span style={{ color: '#dc2626' }}>*</span>
+        </label>
+        <input
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  style={inputStyle}
+  onFocus={(e) => {
+    e.target.style.border = '1px solid #4f46e5';
+    e.target.style.boxShadow = '0 0 0 4px rgba(79,70,229,.15)';
+  }}
+  onBlur={(e) => {
+    e.target.style.border = '1px solid #d1d5db';
+    e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)';
+  }}
+/>
+
+        <label
+          style={{
+          display: 'block',
+          textAlign: 'left',
+          marginBottom: '8px',
+          marginTop: '18px',
+          fontWeight: '700',
+          fontSize: '16px',
+          color: '#111827'
+        }}
+      >
+         Professional Title <span style={{ color: '#dc2626' }}>*</span>
+        </label>
+        <input
+  value={professionalTitle}
+  onChange={(e) => setProfessionalTitle(e.target.value)}
+  style={inputStyle}
+  onFocus={(e) => {
+    e.target.style.border = '1px solid #4f46e5';
+    e.target.style.boxShadow = '0 0 0 4px rgba(79,70,229,.15)';
+  }}
+  onBlur={(e) => {
+    e.target.style.border = '1px solid #d1d5db';
+    e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)';
+  }}
+/>
+
+        <label
   style={{
     display: 'block',
     textAlign: 'left',
     marginBottom: '8px',
+    marginTop: '18px',
     fontWeight: '700',
-    fontSize: '15px',
+    fontSize: '16px',
     color: '#111827'
   }}
 >
-  Full Name <span style={{ color: 'red' }}>*</span>
+  LinkedIn URL
+  <span
+    style={{
+      color: '#64748b',
+      fontWeight: '400',
+      marginLeft: '6px'
+    }}
+  >
+    (Optional)
+  </span>
 </label>
-
-  <input
-    style={inputStyle}
-    placeholder="Enter your full name"
-    value={fullName}
-    onChange={(e) => setFullName(e.target.value)}
-    style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '48px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '12px',
-        fontSize: '16px',
-        outline: 'none'
-      }}
-  />
-</div>
-
-<div style={{ marginBottom: '18px' }}>
-  <label
-    style={{
-      display: 'block',
-      textAlign: 'left',
-      marginBottom: '8px',
-      fontWeight: '700',
-      fontSize: '15px',
-      color: '#111827'
-    }}
-  >
-    Professional Title <span style={{ color: 'red' }}>*</span>
-  </label>
-
-  <input
-    style={inputStyle}
-    placeholder="e.g. Power BI Developer"
-    value={professionalTitle}
-    onChange={(e) => setProfessionalTitle(e.target.value)}
-    style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '48px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '12px',
-        fontSize: '16px',
-        outline: 'none'
-      }}
-  />
-</div>
-
-<div style={{ marginBottom: '18px' }}>
-  <label
-    style={{
-      display: 'block',
-      textAlign: 'left',
-      marginBottom: '8px',
-      fontWeight: '700',
-      fontSize: '15px',
-      color: '#111827'
-    }}
-  >
-    LinkedIn URL
-  </label>
-
-  <input
-    style={inputStyle}
-    placeholder="https://linkedin.com/in/yourprofile"
-    value={linkedinUrl}
-    onChange={(e) => setLinkedinUrl(e.target.value)}
-    style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '48px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '12px',
-        fontSize: '16px',
-        outline: 'none'
-      }}
-  />
-</div>
-
-<div style={{ marginBottom: '18px' }}>
-  <label
-    style={{
-      display: 'block',
-      textAlign: 'left',
-      marginBottom: '8px',
-      fontWeight: '700',
-      fontSize: '15px',
-      color: '#111827'
-    }}
-  >
-    Email Address
-  </label>
-
-  <input
-    style={inputStyle}
-    placeholder="you@example.com"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '48px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '12px',
-        fontSize: '16px',
-        outline: 'none'
-      }}
-  />
-</div>
-{errorMessage && (
-  <p
-    style={{
-      color: '#dc2626',
-      marginBottom: '16px',
-      fontWeight: '600',
-      textAlign: 'center'
-    }}
-  >
-    {errorMessage}
-  </p>
-)}
-<div
-  style={{
-    display: 'flex',
-    justifyContent: 'flex-end',
-    marginTop: '24px'
+        <input
+  value={linkedinUrl}
+  onChange={(e) => setLinkedinUrl(e.target.value)}
+  style={inputStyle}
+  onFocus={(e) => {
+    e.target.style.border = '1px solid #4f46e5';
+    e.target.style.boxShadow = '0 0 0 4px rgba(79,70,229,.15)';
   }}
->
+  onBlur={(e) => {
+    e.target.style.border = '1px solid #d1d5db';
+    e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,.04)';
+  }}
+/>
+      </>
+    )}
 
-          <button
-             style={nextButtonStyle}
-             onClick={() => {
-              if (!fullName || !professionalTitle) {
-                setErrorMessage(
-                  'Please enter your full name and professional title.'
-                );
-                return;
-              }
+    {errorMessage && (
+      <p style={{ color: '#dc2626', fontWeight: '600', textAlign: 'center' }}>
+        {errorMessage}
+      </p>
+    )}
 
-              setErrorMessage('');
-              setCurrentStep(2);
-
-            }}
-           >
-            Continue →
-          </button>
-        </div></div>
-      )}
+    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+      <button
+        style={nextButtonStyle}
+        onClick={() => {
+          if (!loadedStudent) {
+            setErrorMessage('Please connect your Colaberry account first.');
+            return;
+          }
+          if (
+             !fullName.trim() ||
+             !email.trim() ||
+             !professionalTitle.trim()
+          ) {
+             setErrorMessage(
+                'Please complete all required fields before continuing.'
+            );
+            return;
+            }
+          setErrorMessage('');
+          setCurrentStep(2);
+        }}
+      >
+        Continue →
+      </button>
+    </div>
+  </div>
+)}
 
 {currentStep === 2 && (
   <div style={sectionStyle}>
     <div style={{ textAlign: 'left', marginBottom: '28px' }}>
+      <span
+        style={{
+          background: '#4f46e5',
+          color: 'white',
+          padding: '6px 12px',
+          borderRadius: '8px',
+          fontSize: '13px',
+          fontWeight: '700'
+        }}
+      >
+        STEP 2
+      </span>
 
-  <span
+      <h2
+        style={{
+          marginTop: '18px',
+          marginBottom: '10px',
+          fontSize: '28px',
+          fontWeight: '700'
+        }}
+      >
+        Connect GitHub 🐙
+      </h2>
+
+      <p
+        style={{
+          color: '#64748b',
+          fontSize: '15px',
+          lineHeight: '1.6',
+          maxWidth: '550px'
+        }}
+      >
+        Connect your GitHub account so PortfolioForge can create or update your portfolio repository.
+      </p>
+    </div>
+
+    <div
+      style={{
+        background: githubConnected ? '#dcfce7' : '#fef3c7',
+        border: githubConnected ? '1px solid #22c55e' : '1px solid #f59e0b',
+        color: githubConnected ? '#166534' : '#92400e',
+        padding: '16px',
+        borderRadius: '10px',
+        marginBottom: '20px',
+        textAlign: 'left',
+        fontWeight: '600'
+      }}
+    >
+      {githubConnected ? (
+        <>
+          ✅ GitHub connected successfully
+          <br />
+          <span style={{ fontWeight: '500' }}>
+            Connected as {connectedUsername}
+          </span>
+        </>
+      ) : (
+        'GitHub is not connected yet.'
+      )}
+    </div>
+
+    {!githubConnected && (
+      <button
+        style={{
+          ...nextButtonStyle,
+          marginBottom: '24px'
+        }}
+        onClick={() => {
+          window.open(
+            'http://localhost:3001/auth/github',
+            'githubOAuthPopup',
+            'width=300,height=150,top=200,left=550,resizable=no'
+          );
+
+          const checkConnection = setInterval(async () => {
+            try {
+              const res = await fetch('http://localhost:3001/auth/github/status');
+              const data = await res.json();
+
+              if (data.connected) {
+                setGithubConnected(true);
+                setConnectedUsername(data.username);
+                setGithubUsername(data.username);
+                clearInterval(checkConnection);
+              }
+            } catch (error) {
+              console.error('GitHub connection check failed:', error);
+            }
+          }, 2000);
+        }}
+      >
+        Connect GitHub Account
+      </button>
+    )}
+
+   <div
+  style={{
+    border: '1px solid #dbe3ef',
+    borderRadius: '12px',
+    padding: '18px',
+    marginBottom: '24px',
+    background: '#ffffff'
+  }}
+>
+  <h3
     style={{
-      background: '#4f46e5',
-      color: 'white',
-      padding: '6px 12px',
-      borderRadius: '8px',
-      fontSize: '13px',
-      fontWeight: '700'
+      margin: '0 0 6px 0',
+      fontSize: '17px',
+      color: '#111827',
+      textAlign: 'left'
     }}
   >
-    STEP 2
-  </span>
-
-  <h2
-    style={{
-      marginTop: '18px',
-      marginBottom: '10px',
-      fontSize: '28px',
-      fontWeight: '700'
-    }}
-  >
-    Connect your GitHub 🐙
-  </h2>
+    Repository Selection
+  </h3>
 
   <p
     style={{
+      margin: '0 0 18px 0',
       color: '#64748b',
-      fontSize: '15px',
-      lineHeight: '1.6',
-      maxWidth: '500px'
+      fontSize: '14px',
+      textAlign: 'left'
     }}
   >
-    Connect GitHub to create your portfolio
+    Choose whether to create a new GitHub repository or update an existing one.
   </p>
 
-</div>
+  <label
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      marginBottom: '14px',
+      cursor: 'pointer',
+      fontWeight: '700'
+    }}
+  >
+    <input
+      type="radio"
+      checked={portfolioMode === 'create'}
+      onChange={() => {
+        setPortfolioMode('create');
+        setRepoName('');
+      }}
+    />
+    Create a new repository
+  </label>
 
-<div
-  style={{
-    background: githubConnected ? '#dcfce7' : '#fef3c7',
-    border: githubConnected ? '1px solid #22c55e' : '1px solid #f59e0b',
-    color: githubConnected ? '#166534' : '#92400e',
-    padding: '16px',
-    borderRadius: '10px',
-    marginBottom: '16px',
-    textAlign: 'center'
-  }}
->
-  {githubConnected ? (
+  {portfolioMode === 'create' && (
     <>
-      <div style={{ fontWeight: '700', fontSize: '18px' }}>
-        ✅ GitHub connected successfully
-      </div>
-
-      <div
+      <label
         style={{
-          fontSize: '14px',
-          marginTop: '4px'
+          display: 'block',
+          textAlign: 'left',
+          marginBottom: '8px',
+          fontWeight: '700',
+          fontSize: '16px',
+          color: '#111827'
         }}
       >
-        Connected as {connectedUsername}
-      </div>
+        New Repository Name <span style={{ color: '#dc2626' }}>*</span>
+      </label>
+
+      <input
+        value={repoName}
+        onChange={(e) => setRepoName(e.target.value)}
+        placeholder="e.g. kalkidan-portfolio"
+        style={inputStyle}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
+      />
     </>
-  ) : (
-    'GitHub not connected'
+  )}
+
+  <label
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      marginTop: '20px',
+      marginBottom: '14px',
+      cursor: 'pointer',
+      fontWeight: '700'
+    }}
+  >
+    <input
+      type="radio"
+      checked={portfolioMode === 'update'}
+      onChange={() => {
+        setPortfolioMode('update');
+        setRepoName('');
+      }}
+    />
+    Update an existing repository
+  </label>
+
+  {portfolioMode === 'update' && (
+    <>
+      <label
+        style={{
+          display: 'block',
+          textAlign: 'left',
+          marginBottom: '8px',
+          fontWeight: '700',
+          fontSize: '16px',
+          color: '#111827'
+        }}
+      >
+        Existing Repository Name <span style={{ color: '#dc2626' }}>*</span>
+      </label>
+
+      <input
+        value={repoName}
+        onChange={(e) => setRepoName(e.target.value)}
+        placeholder="Enter existing repository name"
+        style={inputStyle}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
+      />
+
+      <p
+        style={{
+          marginTop: '8px',
+          fontSize: '13px',
+          color: '#64748b',
+          textAlign: 'left'
+        }}
+      >
+        Enter the GitHub repository name you want PortfolioForge to update.
+      </p>
+    </>
   )}
 </div>
 
-{!githubConnected && (
-  <button
-    style={nextButtonStyle}
-    onClick={() => {
-  window.open(
-  'http://localhost:3001/auth/github',
-  'githubOAuthPopup',
-  'width=300,height=150,top=200,left=550,resizable=no'
-);
-
-  const checkConnection = setInterval(async () => {
-    try {
-      const res = await fetch('http://localhost:3001/auth/github/status');
-      const data = await res.json();
-
-      if (data.connected) {
-        setGithubConnected(true);
-        setConnectedUsername(data.username);
-        setGithubUsername(data.username);
-
-        clearInterval(checkConnection);
-      }
-    } catch (error) {
-      console.error('GitHub connection check failed:', error);
-    }
-  }, 2000);
-}}
-
-  >
-    Connect GitHub
-  </button>
-)}
-
-    <div style={{ marginBottom: '24px' }}>
-
-  <label
-    style={{
-      display: 'block',
-      textAlign: 'left',
-      marginBottom: '10px',
-      fontWeight: '700',
-      fontSize: '16px',
-      color: '#111827'
-    }}
-  >
-    Portfolio Repository Name <span style={{ color: 'red' }}>*</span>
-  </label>
-
-  <div style={{ position: 'relative' }}>
-    <span
-      style={{
-        position: 'absolute',
-        left: '16px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        color: '#9ca3af',
-        fontSize: '18px'
-      }}
-    >
-    </span>
-    <input
-      value={repoName}
-      onChange={(e) => setRepoName(e.target.value)}
-      placeholder="Repository name "
-      style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        height: '48px',
-        paddingLeft: '48px',
-        border: '1px solid #dcdcde',
-        boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
-        borderRadius: '12px',
-        fontSize: '16px',
-        outline: 'none'
-      }}
-    />
-  </div>
-</div>
-<p
-  style={{
-    color: '#64748b',
-    fontSize: '14px',
-    marginTop: '8px',
-    textAlign: 'left'
-  }}
->
-  This repository will be created or updated with your generated portfolio.
-</p>
-
-<div style={{ marginTop: '20px' }}>
-  <label
-    style={{
-      display: 'block',
-      fontWeight: '700',
-      marginBottom: '12px'
-    }}
-  >
-    Portfolio Action <span style={{ color: 'red' }}>*</span>
-  </label>
-
-  <div
-    style={{
-      display: 'flex',
-      gap: '16px'
-    }}
-  >
-    <label
-      style={{
-        flex: 1,
-        border:
-          portfolioMode === 'create'
-            ? '2px solid #2563eb'
-            : '1px solid #d1d5db',
-        borderRadius: '10px',
-        padding: '16px',
-        cursor: 'pointer'
-      }}
-    >
-      <input
-        type="radio"
-        checked={portfolioMode === 'create'}
-        onChange={() => setPortfolioMode('create')}
-      />
-
-      <strong>Create New Portfolio</strong>
-
-      <p>
-        Generate a brand new portfolio and replace existing content.
+    {errorMessage && (
+      <p
+        style={{
+          color: '#dc2626',
+          marginBottom: '16px',
+          fontWeight: '600',
+          textAlign: 'center'
+        }}
+      >
+        {errorMessage}
       </p>
-    </label>
+    )}
 
-    <label
-      style={{
-        flex: 1,
-        border:
-          portfolioMode === 'update'
-            ? '2px solid #22c55e'
-            : '1px solid #d1d5db',
-        borderRadius: '10px',
-        padding: '16px',
-        cursor: 'pointer'
-      }}
-    >
-      <input
-        type="radio"
-        checked={portfolioMode === 'update'}
-        onChange={() => setPortfolioMode('update')}
-      />
-
-      <strong>Update Existing Portfolio</strong>
-
-      <p>
-        Keep existing projects and add new ones.
-      </p>
-    </label>
-  </div>
-</div>
-
-{errorMessage && (
-  <p
-    style={{
-      color: '#dc2626',
-      marginBottom: '16px',
-      fontWeight: '600',
-      textAlign: 'center'
-    }}
-  >
-    {errorMessage}
-  </p>
-)}
     <div
       style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: '24px',
-        maxWidth: '850px',
-        margin: '24px auto 0 auto'
+        marginTop: '24px'
       }}
-    >  
+    >
       <button
         style={backButtonStyle}
         onClick={() => setCurrentStep(1)}
@@ -720,196 +772,144 @@ function App() {
         ← Back
       </button>
 
+      <button
+        style={nextButtonStyle}
+        onClick={() => {
+          if (!githubConnected || !repoName) {
+            setErrorMessage('Please connect GitHub and enter a repository name.');
+            return;
+          }
 
-<button
-  style={nextButtonStyle}
-  onClick={() => {
-    if (!githubConnected || !repoName) {
-      setErrorMessage('Please connect GitHub and enter a repository name.');
-      return;
-    }
-
-    setErrorMessage('');
-    setCurrentStep(3);
-  }}
->
-  Continue →
-</button>
+          setErrorMessage('');
+          setCurrentStep(3);
+        }}
+      >
+        Continue →
+      </button>
     </div>
   </div>
 )}
 
 {currentStep === 3 && (
   <div style={sectionStyle}>
-    <div
-  style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px'
-  }}
->
-  <div style={{ textAlign: 'left' }}>
-    <span
-      style={{
-        background: '#4f46e5',
-        color: 'white',
-        padding: '6px 12px',
-        borderRadius: '8px',
-        fontSize: '13px',
-        fontWeight: '700'
-      }}
-    >
-      STEP 3
-    </span>
-
-    <h2
-  style={{
-    marginTop: '18px',
-    marginBottom: '10px',
-    fontSize: '28px',
-    fontWeight: '700'
-  }}
->
-  Colaberry Project Links 🔗
-</h2>
-
-    <p
-    style={{
-      color: '#64748b',
-      fontSize: '15px',
-      lineHeight: '1.6',
-      maxWidth: '500px'
-    }}
-  >
-      Add up to 10 project links and we’ll analyze them to build your portfolio
-    </p>
-  </div>
-
-
-</div>
-<div style={{ width: '100%', margin: '0 auto' }}>
-
-  {projectLinks.map((link, index) => (
-    <div key={index} style={{ marginBottom: '18px' }}>
-
-      <label
+    <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+      <span
         style={{
-          display: 'block',
-          textAlign: 'left',
-          marginBottom: '10px',
-          fontWeight: '700',
-          fontSize: '18px',
-          color: '#111827'
-        }}
-      >
-        Project Link {index + 1}
-
-        {index === 0 ? (
-          <span style={{ color: 'red' }}> *</span>
-        ) : (
-          <span
-            style={{
-              fontWeight: '400',
-              fontSize: '14px',
-              color: '#6b7280',
-              marginLeft: '6px'
-            }}
-          >
-            (Optional)
-          </span>
-        )}
-      </label>
-
-      <input
-        type="text"
-        placeholder="https://app.colaberry.com/..."
-        value={link}
-        onChange={(e) => {
-          const updatedLinks = [...projectLinks];
-          updatedLinks[index] = e.target.value;
-          setProjectLinks(updatedLinks);
-        }}
-        style={{
-          width: '100%',
-          boxSizing: 'border-box',
-          height: '48px',
-          paddingLeft: '16px',
-          border: '1px solid #dcdcde',
-          boxShadow: '0 0 0 3px rgba(79,70,229,0.15)',
+          background: '#4f46e5',
+          color: 'white',
+          padding: '6px 12px',
           borderRadius: '8px',
-          fontSize: '15px',
-          outline: 'none'
+          fontSize: '13px',
+          fontWeight: '700'
         }}
-      />
-    </div>
-  ))}
-
-  {projectLinks.length < MAX_PROJECT_LINKS && (
-    <button
-      type="button"
-      onClick={() => {
-        setProjectLinks([...projectLinks, '']);
-      }}
-      style={{
-        padding: '10px 16px',
-        background: '#eef2ff',
-        color: '#2563eb',
-        border: '1px solid #c7d2fe',
-        borderRadius: '8px',
-        fontWeight: '700',
-        cursor: 'pointer',
-        marginBottom: '18px'
-      }}
-    >
-      + Add Project
-    </button>
-  )}
-
-</div>
-{errorMessage && (
-  <p
-    style={{
-      color: '#dc2626',
-      marginBottom: '16px',
-      fontWeight: '600',
-      textAlign: 'center'
-    }}
-  >
-    {errorMessage}
-  </p>
-)}
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: '24px',
-        maxWidth: '850px',
-        margin: '24px auto 0 auto'
-      }}
-    >
-      <button
-        style={backButtonStyle}
-        onClick={() => setCurrentStep(2)}
       >
-       ← Back
+        STEP 3
+      </span>
+
+      <h2 style={{ marginTop: '18px', marginBottom: '10px', fontSize: '28px', fontWeight: '700' }}>
+        My Colaberry Projects 📂
+      </h2>
+
+      <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.6' }}>
+        Load your real Colaberry projects from the database and choose which ones to include.
+      </p>
+    </div>
+
+    {loadedStudent && (
+      <div
+        style={{
+          background: '#ecfdf5',
+          border: '1px solid #86efac',
+          color: '#166534',
+          padding: '14px',
+          borderRadius: '10px',
+          marginBottom: '18px',
+          fontWeight: '600'
+        }}
+      >
+        ✅ Loaded profile: {loadedStudent.FirstName} {loadedStudent.LastName} — {loadedStudent.Email}
+      </div>
+    )}
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {loadedProjects.map((project, index) => (
+        <div
+          key={index}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '16px',
+            background: '#ffffff'
+          }}
+        >
+          <input
+  type="checkbox"
+  checked={selectedProjectLinks.includes(project.projectLink)}
+  onChange={(e) => {
+    if (e.target.checked) {
+      setSelectedProjectLinks([...selectedProjectLinks, project.projectLink]);
+    } else {
+      setSelectedProjectLinks(
+        selectedProjectLinks.filter(link => link !== project.projectLink)
+      );
+    }
+  }}
+          />
+          {project.imageUrl && (
+            <img
+              src={project.imageUrl}
+              alt={project.title}
+              style={{
+                width: '90px',
+                height: '56px',
+                objectFit: 'cover',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb'
+              }}
+            />
+          )}
+
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: '700', color: '#111827', fontSize: '14px', lineHeight: '1.35' }}>
+              {project.title}
+            </div>
+
+            <div style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
+              {project.summary ? project.summary.slice(0, 120) + '...' : 'Loaded from Colaberry database'}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {errorMessage && (
+      <p style={{ color: '#dc2626', marginTop: '16px', fontWeight: '600', textAlign: 'center' }}>
+        {errorMessage}
+      </p>
+    )}
+
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+      <button style={backButtonStyle} onClick={() => setCurrentStep(2)}>
+        ← Back
       </button>
 
-<button
-  style={nextButtonStyle}
-  onClick={() => {
-    if (!projectLinks[0]) {
-      setErrorMessage('Please enter at least one Colaberry project link.');
-      return;
-    }
+      <button
+        style={nextButtonStyle}
+        onClick={() => {
+          if (selectedProjectLinks.length === 0) {
+            setErrorMessage('Please select at least one project to include.');
+            return;
+          }
 
-    setErrorMessage('');
-    setCurrentStep(4);
-  }}
->
-  Preview & Publish →
-</button>
+          setErrorMessage('');
+          setCurrentStep(4);
+        }}
+      >
+        Continue to Preview →
+      </button>
     </div>
   </div>
 )}
@@ -957,7 +957,7 @@ function App() {
 <div
   style={{
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: '36% 1fr',
     gap: '30px',
     maxWidth: '850px',
     margin: '20px auto'
@@ -977,36 +977,68 @@ function App() {
   Your Information
 </h3>
 
-<div style={{ display: 'flex', flexDirection: 'column', gap: '12px', color: '#374151' }}>
-  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
-    <span>👤 Name</span>
-    <strong>{fullName || 'Not provided'}</strong>
-  </div>
+<div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
-    <span>💼 Title</span>
-    <strong>{professionalTitle || 'Not provided'}</strong>
-  </div>
-  
-  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
-    <span>📧 Email</span>
-    <strong>{email || 'Not provided'}</strong>
-  </div>
+  {[
+    ['👤', 'Name', fullName || 'Not provided'],
+    ['💼', 'Title', professionalTitle || 'Not provided'],
+    ['📧', 'Email', email || 'Not provided'],
+    ['🔗', 'LinkedIn', linkedinUrl || 'Not provided'],
+    ['🐙', 'GitHub', githubUsername || 'Not provided'],
+    ['📁', 'Repository', repoName || 'Not provided']
+  ].map(([icon, label, value]) => (
 
-  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
-    <span>🔗 LinkedIn</span>
-    <strong>{linkedinUrl || 'Not provided'}</strong>
-  </div>
-  
-  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
-    <span>🐙 GitHub</span>
-    <strong>{githubUsername || 'Not provided'}</strong>
-  </div>
+    <div
+      key={label}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '8px'
+      }}
+    >
 
-  <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px' }}>
-    <span>📁 Repository</span>
-    <strong>{repoName || 'Not provided'}</strong>
-  </div>
+      <span
+        style={{
+          fontSize: '14px',
+          marginTop: '2px',
+          width: '18px',
+          textAlign: 'center'
+        }}
+      >
+        {icon}
+      </span>
+
+      <div style={{ flex: 1 }}>
+
+        <div
+          style={{
+            fontSize: '12px',
+            fontWeight: '600',
+            color: '#6b7280',
+            lineHeight: '1.2'
+          }}
+        >
+          {label}
+        </div>
+
+        <div
+          style={{
+            marginTop: '3px',
+            fontSize: '15px',
+            fontWeight: '700',
+            color: '#111827',
+            lineHeight: '1.4'
+          }}
+        >
+          {value}
+        </div>
+
+      </div>
+
+    </div>
+
+  ))}
+
 </div>
   </div>
 
@@ -1024,13 +1056,48 @@ function App() {
       Selected Projects
     </h3>
 
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#374151' }}>
-      {projectLinks
-        .filter(Boolean)
-        .map((link, index) => (
-          <div key={index}>🔗 Project {index + 1}</div>
-        ))}
+<div style={{ display: 'flex', flexDirection: 'column', gap: '14px', color: '#374151', width: '100%' }}>
+  {loadedProjects.map((project, index) => (
+    <div
+      key={index}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        border: '1px solid #e5e7eb',
+        borderRadius: '10px',
+        padding: '12px',
+        background: '#ffffff',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}
+    >
+      {project.imageUrl && (
+        <img
+          src={project.imageUrl}
+          alt={project.title}
+          style={{
+            width: '72px',
+            height: '46px',
+            objectFit: 'cover',
+            borderRadius: '6px',
+            border: '1px solid #e5e7eb'
+          }}
+        />
+      )}
+
+      <div>
+        <div style={{ fontWeight: '700', color: '#111827', fontSize: '14px', lineHeight: '1.35'}}>
+          {project.title}
+        </div>
+
+        <div style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
+          Loaded from Colaberry database
+        </div>
+      </div>
     </div>
+  ))}
+</div>
   </div>
 </div>
 {statusMessage && (

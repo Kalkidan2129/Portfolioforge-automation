@@ -576,38 +576,9 @@ async function run() {
   await createGitHubRepo();
 
   if (links.length === 0) {
-  while (links.length < MAX_LINKS) {
-    const input = await promptForLink();
-    
-    if (input === '') {
-      if (links.length >= MIN_LINKS) {
-        console.log("\nInput complete.");
-        break;
-      } else {
-        console.log(`Please enter at least ${MIN_LINKS} link(s).`);
-        continue;
-      }
-    }
-    
-    if (!input.startsWith('http://') && !input.startsWith('https://')) {
-      console.log("Invalid: URL must start with http:// or https://");
-      continue;
-    }
-    
-    if (!isValidUrl(input)) {
-      console.log("Invalid: please enter a valid URL");
-      continue;
-    }
-    
-    if (isDuplicate(input)) {
-      console.log("Invalid: duplicate link, please enter a unique URL");
-      continue;
-    }
-    
-    links.push(input);
-    console.log(`Added: ${input}`);
-  }
-  }
+  console.log('\nNo project links were provided from the UI.');
+  console.log('Project links will be loaded after Colaberry login.\n');
+}
   
   if (links.length === MAX_LINKS) {
     console.log("\nMaximum links reached.");
@@ -621,21 +592,75 @@ async function run() {
   rl.close();
   
   // Run browser test for each validated project link
-  if (links.length > 0) {
-    await processProjects(links);
-  }
+  await processProjects(links);
 }
 
 async function processProjects(projectLinks) {
   console.log("Starting browser...");
   const browser = await chromium.launch({ headless: false });
-  const page = await browser.newPage();
+  let context;
+
+if (fs.existsSync('colaberry-storage-state.json')) {
+  context = await browser.newContext({
+    storageState: 'colaberry-storage-state.json'
+  });
+
+  console.log('Loaded saved Colaberry session.');
+} else {
+  context = await browser.newContext();
+}
+
+const page = await context.newPage();
 
   await page.goto('https://app.colaberry.com');
 
   await page.waitForURL(/\/(dashboard|home|app|profile|portal).*/i, { timeout: 0 });
 
-  console.log("Login completed successfully");
+console.log("Login completed successfully");
+
+// Read browser cookies
+const cookies = await page.context().cookies();
+
+// Find the logged-in student's email
+const myEmailCookie = cookies.find(
+  cookie => cookie.name === 'myEmail' && cookie.domain.includes('colaberry.com')
+);
+
+const loggedInEmail = myEmailCookie?.value || '';
+
+console.log('Logged in Colaberry email:', loggedInEmail || 'not found');
+
+if (projectLinks.length === 0 && loggedInEmail) {
+  const response = await fetch(
+    `http://localhost:3001/api/student/by-email/${encodeURIComponent(loggedInEmail)}/portfolio-data`
+  );
+
+  const portfolioData = await response.json();
+
+  if (portfolioData.student) {
+    studentProfile.fullName =
+      `${portfolioData.student.FirstName} ${portfolioData.student.LastName}`;
+
+    studentProfile.email = portfolioData.student.Email;
+  }
+
+  const databaseLinks = (portfolioData.projects || [])
+    .map(project => project.projectLink)
+    .filter(Boolean);
+
+  projectLinks.push(...databaseLinks);
+
+  console.log('\nLoaded project links from database:');
+  projectLinks.forEach((link, index) => {
+    console.log(`  ${index + 1}. ${link}`);
+  });
+}
+
+if (projectLinks.length === 0) {
+  console.log('No project links found for this student. Stopping generation.');
+  await browser.close();
+  return;
+}
 
   for (let index = 0; index < projectLinks.length; index++) {
     await processSingleProject(page, projectLinks[index], index + 1);
