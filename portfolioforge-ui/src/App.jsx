@@ -25,6 +25,50 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState('');
+  const generationSteps = [
+  {
+    title: 'Sending request',
+    description: 'Sending your portfolio request to the PortfolioForge server.'
+  },
+  {
+    title: 'Browser launched',
+    description: 'Opening an authenticated Colaberry browser session.'
+  },
+  {
+    title: 'Student profile loaded',
+    description: 'Retrieving your profile information.'
+  },
+  {
+    title: 'Project links loaded',
+    description: 'Loading your selected Colaberry projects.'
+  },
+  {
+    title: 'Extracting project data',
+    description: 'Extracting project content and screenshots.'
+  },
+  {
+    title: 'Reading project content',
+    description: 'Analyzing project files and documentation.'
+  },
+  {
+    title: 'Generating portfolio content',
+    description: 'Using AI to generate recruiter-ready documentation.'
+  },
+  {
+    title: 'Building portfolio page',
+    description: 'Creating your portfolio structure and README files.'
+  },
+  {
+    title: 'Publishing to GitHub',
+    description: 'Uploading your portfolio repository to GitHub.'
+  },
+  {
+    title: 'Portfolio generated successfully',
+    description: 'Your portfolio is complete and ready to share.'
+  }
+];
+
+const [generationStep, setGenerationStep] = useState(0);
   
   useEffect(() => {
   fetch('http://localhost:3001/auth/github/status')
@@ -58,7 +102,9 @@ function App() {
   }
 
   setIsGenerating(true);
+  setGenerationStep(0);
   setStatusMessage('Sending request to PortfolioForge backend...');
+  setGenerationStep(1);
 
   try {
     const response = await fetch('http://localhost:3001/generate-portfolio', {
@@ -79,12 +125,23 @@ function App() {
         const statusData = await statusResponse.json();
 
     if (statusData.completed) {
+      setGenerationStep(generationSteps.length);
       setStatusMessage(`Portfolio generated successfully! View Portfolio: ${statusData.portfolioUrl}`);
       setIsGenerating(false);
       clearInterval(statusInterval);
-  } else {
-      setStatusMessage(statusData.step || 'Portfolio generation is running...');
+    } else {
+    const currentStatus = statusData.step || 'Portfolio generation is running...';
+
+    setStatusMessage(currentStatus);
+
+    const stepIndex = generationSteps.findIndex(step =>
+      currentStatus.includes(step.title)
+    );
+
+    if (stepIndex !== -1) {
+      setGenerationStep(stepIndex + 1);
     }
+}
     } catch (error) {
     console.error(error);
     setStatusMessage('Unable to read portfolio generation status.');
@@ -1100,37 +1157,95 @@ const inputStyle = {
 </div>
   </div>
 </div>
-{statusMessage && (
-  <div
-    style={{
-      marginTop: '20px',
-      marginBottom: '20px',
-      padding: '16px',
-      background: statusMessage.includes('Portfolio generated successfully') ? '#dcfce7' : '#eef2ff',
-      border: statusMessage.includes('Portfolio generated successfully') ? '2px solid #22c55e' : 'none',
-      borderRadius: '10px',
-      color: statusMessage.includes('Portfolio generated successfully') ? '#166534' : '#374151',
-      fontWeight: '600'
-    }}
-  >
-    {statusMessage.includes('http') ? (
-  <>
-    Portfolio generated successfully!
-    <br />
-    <a
-      href={statusMessage.match(/https?:\/\/\S+/)?.[0]}
-      target="_blank"
-      rel="noreferrer"
-      style={{ color: '#2563eb', fontWeight: '700' }}
-    >
-      Open Portfolio
-    </a>
-  </>
-) : (
-  statusMessage
-)}
+
+{generationStep > 0 && (
+  <div style={{
+    background: '#ffffff',
+    padding: '24px',
+    marginBottom: '24px',
+    borderRadius: '14px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+  }}>
+    {/* <h3 style={{ marginTop: 0, color: '#111827' }}>
+      Portfolio Generation Progress
+    </h3> */}
+<div
+  style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '8px',
+    fontSize: '14px',
+    color: '#4b5563',
+    fontWeight: '600'
+  }}
+>
+  <span>
+    Step {Math.min(generationStep, generationSteps.length)} of {generationSteps.length}
+  </span>
+
+  <span>
+    {Math.round((generationStep / generationSteps.length) * 100)}%
+  </span>
+</div>
+
+<div style={{
+  width: '100%',
+  height: '10px',
+  background: '#e5e7eb',
+  borderRadius: '999px',
+  overflow: 'hidden',
+  marginBottom: '20px'
+}}>
+  <div style={{
+    width: `${(generationStep / generationSteps.length) * 100}%`,
+    height: '100%',
+    background: '#2563eb',
+    transition: 'width 0.3s ease'
+  }} />
+</div>
+
+<div
+  style={{
+    marginTop: '20px',
+    padding: '18px 24px',
+    background: generationStep === generationSteps.length ? '#dcfce7' : '#eef2ff',
+    border: generationStep === generationSteps.length ? '1px solid #22c55e' : 'none',
+    borderRadius: '10px',
+    textAlign: 'center',
+    color: generationStep === generationSteps.length ? '#166534' : '#111827',
+    fontSize: '18px',
+    fontWeight: '600'
+  }}
+>
+  {generationStep === generationSteps.length ? (
+    <>
+      <div>Portfolio generated successfully!</div>
+      {statusMessage.includes('http') && (
+        <a
+          href={statusMessage.match(/https?:\/\/\S+/)?.[0]}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: 'inline-block',
+            marginTop: '8px',
+            color: '#2563eb',
+            fontWeight: '700'
+          }}
+        >
+          Open Portfolio
+        </a>
+      )}
+    </>
+  ) : (
+    <>⏳ {generationSteps[Math.max(generationStep - 1, 0)]?.title || statusMessage}...</>
+  )}
+</div>
+
+
   </div>
 )}
+
+
 
     <div
       style={{
