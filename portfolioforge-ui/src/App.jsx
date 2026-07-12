@@ -16,10 +16,22 @@ function App() {
   const [projectLinks, setProjectLinks] = useState(['']);
   const [loadedStudent, setLoadedStudent] = useState(null);
   const [loadedProjects, setLoadedProjects] = useState([]);
+  const [networkProjects, setNetworkProjects] = useState([]);
   const [selectedProjectLinks, setSelectedProjectLinks] = useState([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
-  
+  const [isLoadingNetworkProjects, setIsLoadingNetworkProjects] = useState(false);
+  const [projectSource, setProjectSource] = useState('my-projects');
+  const [networkCategory, setNetworkCategory] = useState('All');
+  const [networkCategories, setNetworkCategories] = useState([]);
+
   const MAX_PROJECT_LINKS = 10;
+  const selectedMyProjectsCount = loadedProjects.filter((project) =>
+  selectedProjectLinks.includes(project.projectLink)
+  ).length;
+
+  const selectedNetworkProjectsCount = networkProjects.filter((project) =>
+  selectedProjectLinks.includes(project.projectLink)
+  ).length;
 
   const [statusMessage, setStatusMessage] = useState('Ready to generate your GitHub portfolio 🚀');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -870,6 +882,179 @@ const inputStyle = {
       <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.6' }}>
         Load your real Colaberry projects from the database and choose which ones to include.
       </p>
+      <div
+  style={{
+    display: 'flex',
+    gap: '10px',
+    marginTop: '18px',
+    marginBottom: '22px'
+  }}
+>
+  <button
+    type="button"
+    onClick={() => setProjectSource('my-projects')}
+    style={{
+      padding: '10px 16px',
+      borderRadius: '8px',
+      border: '1px solid #2563eb',
+      background: projectSource === 'my-projects' ? '#2563eb' : '#ffffff',
+      color: projectSource === 'my-projects' ? '#ffffff' : '#2563eb',
+      fontWeight: '700',
+      cursor: 'pointer'
+    }}
+  >
+    My Projects ({selectedMyProjectsCount})
+  </button>
+
+  <button
+    type="button"
+  onClick={async () => {
+  setProjectSource('network-projects');
+
+  if (networkProjects.length > 0) {
+    return;
+  }
+
+  setIsLoadingNetworkProjects(true);
+  setErrorMessage('');
+
+  try {
+    const response = await fetch(
+      'http://localhost:3001/api/colaberry/network-projects'
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to load network projects.');
+    }
+
+    const data = await response.json();
+
+    setNetworkProjects(data.projects || []);
+
+const categoryResponse = await fetch(
+  'http://localhost:3001/api/colaberry/network-project-categories'
+);
+
+if (!categoryResponse.ok) {
+  throw new Error('Failed to load network project categories.');
+}
+
+const categoryData = await categoryResponse.json();
+
+setNetworkCategories(categoryData.categories || []);
+  } catch (error) {
+    console.error(error);
+    setErrorMessage('Could not load Colaberry Network projects.');
+  } finally {
+    setIsLoadingNetworkProjects(false);
+  }
+}}
+    style={{
+      padding: '10px 16px',
+      borderRadius: '8px',
+      border: '1px solid #2563eb',
+      background: projectSource === 'network-projects' ? '#2563eb' : '#ffffff',
+      color: projectSource === 'network-projects' ? '#ffffff' : '#2563eb',
+      fontWeight: '700',
+      cursor: 'pointer'
+    }}
+  >
+    {isLoadingNetworkProjects
+      ? 'Loading...'
+      : `Network Projects (${selectedNetworkProjectsCount})`}
+  </button>
+</div>
+{projectSource === 'network-projects' && (
+  <div
+    style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '10px',
+      marginBottom: '22px'
+    }}
+  >
+    <button
+      type="button"
+      onClick={async () => {
+  setNetworkCategory('All');
+  setIsLoadingNetworkProjects(true);
+  setErrorMessage('');
+
+  try {
+    const response = await fetch(
+      'http://localhost:3001/api/colaberry/network-projects?category=All'
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to load all network projects.');
+    }
+
+    const data = await response.json();
+    setNetworkProjects(data.projects || []);
+  } catch (error) {
+    console.error(error);
+    setErrorMessage('Could not load network projects.');
+  } finally {
+    setIsLoadingNetworkProjects(false);
+  }
+}}
+      style={{
+        padding: '8px 14px',
+        borderRadius: '999px',
+        border: '1px solid #cbd5e1',
+        background: networkCategory === 'All' ? '#2563eb' : '#ffffff',
+        color: networkCategory === 'All' ? '#ffffff' : '#334155',
+        fontWeight: '700',
+        cursor: 'pointer'
+      }}
+    >
+      All
+    </button>
+
+    {networkCategories.map((category) => (
+      <button
+        key={category.name}
+        type="button"
+        onClick={async () => {
+  setNetworkCategory(category.name);
+  setIsLoadingNetworkProjects(true);
+  setErrorMessage('');
+
+  try {
+    const response = await fetch(
+      `http://localhost:3001/api/colaberry/network-projects?category=${encodeURIComponent(category.name)}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to load ${category.name} projects.`);
+    }
+
+    const data = await response.json();
+    setNetworkProjects(data.projects || []);
+  } catch (error) {
+    console.error(error);
+    setErrorMessage(`Could not load ${category.name} projects.`);
+  } finally {
+    setIsLoadingNetworkProjects(false);
+  }
+}}
+        style={{
+          padding: '8px 14px',
+          borderRadius: '999px',
+          border: '1px solid #cbd5e1',
+          background:
+            networkCategory === category.name ? '#2563eb' : '#ffffff',
+          color:
+            networkCategory === category.name ? '#ffffff' : '#334155',
+          fontWeight: '700',
+          cursor: 'pointer'
+        }}
+      >
+        {category.name} ({category.count})
+      </button>
+    ))}
+  </div>
+)}
     </div>
 
     {loadedStudent && (
@@ -888,8 +1073,20 @@ const inputStyle = {
       </div>
     )}
 
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {loadedProjects.map((project, index) => (
+    <div
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    maxHeight: projectSource === 'network-projects' ? '390px' : 'none',
+    overflowY: projectSource === 'network-projects' ? 'auto' : 'visible',
+    paddingRight: projectSource === 'network-projects' ? '8px' : '0'
+  }}
+>
+      {(projectSource === 'my-projects'
+        ? loadedProjects
+        : networkProjects
+       ).map((project, index) => (
         <div
           key={index}
           style={{
@@ -1114,7 +1311,11 @@ const inputStyle = {
     </h3>
 
 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', color: '#374151', width: '100%' }}>
-  {loadedProjects.map((project, index) => (
+  {[...loadedProjects, ...networkProjects]
+  .filter((project) =>
+    selectedProjectLinks.includes(project.projectLink)
+  )
+  .map((project, index) => (
     <div
       key={index}
       style={{

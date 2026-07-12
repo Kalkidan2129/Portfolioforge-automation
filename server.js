@@ -625,6 +625,185 @@ const projects = projectRows.map((project) => {
   }
 });
 
+app.get('/api/colaberry/network-projects', async (req, res) => {
+  try {
+    const category = String(req.query.category || 'All').trim();
+
+const categoryKeywords = {
+  'Power BI': ['power bi'],
+
+  'DW ETL': [
+    'dw etl',
+    'data warehouse',
+    'etl'
+  ],
+
+  Qlik: ['qlik'],
+
+  Tableau: ['tableau']
+
+};
+
+    const pool = await sql.connect(sqlConfig);
+    const request = pool.request();
+
+    let categoryCondition = '';
+
+    if (category !== 'All' && categoryKeywords[category]) {
+      const conditions = categoryKeywords[category].map((keyword, index) => {
+        request.input(
+          `keyword${index}`,
+          sql.NVarChar,
+          `%${keyword}%`
+        );
+
+        return `
+          LOWER(ProjectName) LIKE LOWER(@keyword${index})
+          OR LOWER(ISNULL(ProjectSummary, '')) LIKE LOWER(@keyword${index})
+        `;
+      });
+
+      categoryCondition = `
+        AND (
+          ${conditions.map((condition) => `(${condition})`).join(' OR ')}
+        )
+      `;
+    }
+
+const result = await request.query(`
+  WITH RankedProjects AS (
+    SELECT
+      projectID,
+      ProjectName,
+      ProjectSummary,
+      ProjectVisual,
+      ROW_NUMBER() OVER (
+        PARTITION BY LOWER(LTRIM(RTRIM(ProjectName)))
+        ORDER BY projectID DESC
+      ) AS rowNumber
+    FROM dbo.ADF_Proj_Deployed
+    WHERE projectID IS NOT NULL
+      AND ProjectName IS NOT NULL
+      AND LTRIM(RTRIM(ProjectName)) <> ''
+      ${categoryCondition}
+  )
+  SELECT
+    projectID,
+    ProjectName,
+    ProjectSummary,
+    ProjectVisual
+  FROM RankedProjects
+  WHERE rowNumber = 1
+  ORDER BY ProjectName
+`);
+
+    const projects = result.recordset.map((row) => ({
+      userId: null,
+      networkId: Number(row.projectID),
+      projectLink: `https://app.colaberry.com/app/network/network/${row.projectID}/projectinstructions`,
+      title: row.ProjectName,
+      summary: row.ProjectSummary || '',
+      imageUrl: row.ProjectVisual || '',
+      source: 'network'
+    }));
+
+    res.json({
+      category,
+      totalProjects: projects.length,
+      projects
+    });
+  } catch (error) {
+    console.error('Failed to load Colaberry network projects:', error);
+
+    res.status(500).json({
+      totalProjects: 0,
+      projects: [],
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/colaberry/network-project-categories', async (req, res) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+
+    const result = await pool.request().query(`
+      SELECT
+        'Power BI' AS CategoryName,
+        COUNT(DISTINCT LOWER(LTRIM(RTRIM(ProjectName)))) AS ProjectCount
+      FROM dbo.ADF_Proj_Deployed
+      WHERE projectID IS NOT NULL
+        AND ProjectName IS NOT NULL
+        AND LTRIM(RTRIM(ProjectName)) <> ''
+        AND (
+          LOWER(ProjectName) LIKE '%power bi%'
+          OR LOWER(ISNULL(ProjectSummary, '')) LIKE '%power bi%'
+        )
+
+      UNION ALL
+
+      SELECT
+        'DW ETL' AS CategoryName,
+        COUNT(DISTINCT LOWER(LTRIM(RTRIM(ProjectName)))) AS ProjectCount
+      FROM dbo.ADF_Proj_Deployed
+      WHERE projectID IS NOT NULL
+        AND ProjectName IS NOT NULL
+        AND LTRIM(RTRIM(ProjectName)) <> ''
+        AND (
+          LOWER(ProjectName) LIKE '%dw etl%'
+          OR LOWER(ProjectName) LIKE '%data warehouse%'
+          OR LOWER(ProjectName) LIKE '%etl%'
+          OR LOWER(ISNULL(ProjectSummary, '')) LIKE '%dw etl%'
+          OR LOWER(ISNULL(ProjectSummary, '')) LIKE '%data warehouse%'
+          OR LOWER(ISNULL(ProjectSummary, '')) LIKE '%etl%'
+        )
+
+      UNION ALL
+
+      SELECT
+        'Qlik' AS CategoryName,
+        COUNT(DISTINCT LOWER(LTRIM(RTRIM(ProjectName)))) AS ProjectCount
+      FROM dbo.ADF_Proj_Deployed
+      WHERE projectID IS NOT NULL
+        AND ProjectName IS NOT NULL
+        AND LTRIM(RTRIM(ProjectName)) <> ''
+        AND (
+          LOWER(ProjectName) LIKE '%qlik%'
+          OR LOWER(ISNULL(ProjectSummary, '')) LIKE '%qlik%'
+        )
+
+      UNION ALL
+
+      SELECT
+        'Tableau' AS CategoryName,
+        COUNT(DISTINCT LOWER(LTRIM(RTRIM(ProjectName)))) AS ProjectCount
+      FROM dbo.ADF_Proj_Deployed
+      WHERE projectID IS NOT NULL
+        AND ProjectName IS NOT NULL
+        AND LTRIM(RTRIM(ProjectName)) <> ''
+        AND (
+          LOWER(ProjectName) LIKE '%tableau%'
+          OR LOWER(ISNULL(ProjectSummary, '')) LIKE '%tableau%'
+        )
+
+    `);
+
+    const categories = result.recordset.map((row) => ({
+      name: row.CategoryName,
+      count: Number(row.ProjectCount)
+    }));
+
+    res.json({ categories });
+  } catch (error) {
+    console.error('Failed to load network project categories:', error);
+
+    res.status(500).json({
+      categories: [],
+      error: error.message
+    });
+  }
+});
+
 app.listen(3001, () => {
   console.log('PortfolioForge API running on port 3001');
 });

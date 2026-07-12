@@ -332,6 +332,37 @@ Validation:
 * Empty selection validation tested successfully.
 * Multi-project selection logic implemented, but multi-project account testing is pending.
 
+## Milestone 12 — Colaberry Network Project Integration
+
+**Status:** Verified
+
+Completed:
+
+* Implemented Colaberry Network project browsing.
+* Added dedicated backend API for retrieving Network projects.
+* Generated project instruction links using deployed project identifiers.
+* Added My Projects and Network Projects selection modes.
+* Added category-based browsing for:
+  * Power BI
+  * DW ETL
+  * Qlik
+  * Tableau
+* Implemented backend category filtering.
+* Added dynamic category counts.
+* Removed duplicate Network projects by normalizing project names.
+* Updated category counts to reflect unique project names.
+* Removed the previous 30-project retrieval limit.
+* Added a scrollable Network Project list for improved usability.
+* Added selected-project counters for both My Projects and Network Projects.
+* Successfully validated portfolio generation using selected Network projects.
+
+Validation:
+
+* Successfully loaded Network project metadata.
+* Successfully filtered projects by category.
+* Successfully generated portfolios using selected Network projects.
+* Successfully validated category-based project selection.
+
 # Validation Evidence
 
 Verified Through Testing:
@@ -366,6 +397,12 @@ Verified Through Testing:
 * Four-step wizard validation
 * End-to-end portfolio generation validation
 * Update-mode validation
+* Colaberry Network project retrieval
+* Category-based project filtering
+* Category count validation
+* Duplicate project removal
+* Network project portfolio generation
+* Combined project selection workflow
 ---
 
 # Known Limitations
@@ -413,7 +450,7 @@ Dashboard screenshots are not consistently available for all project types.
 Current Limitations:
 
 * Multi-project selection has been implemented but is currently validated only with a single-project account.
-* Project filtering by category has not yet been implemented.
+* Category filtering currently uses keyword matching because no authoritative category relationship has been identified in the database.
 * Some deployed projects still expose inconsistent preview images.
 * Additional metadata may be unavailable for older Colaberry projects.
 
@@ -450,9 +487,9 @@ Not included in the current implementation.
 
 ## High Priority
 
-* Validate multi-project selection using accounts with multiple projects.
-* Improve project filtering and search.
-* Add generation progress indicator.
+* Enforce the maximum project-selection limit across My Projects and Network Projects.
+* Add a combined selected-project counter and selection-limit validation.
+* Continue investigating the official Colaberry Network project catalog and category mappings.
 * Improve dashboard image selection reliability.
 * Expand automated testing coverage.
 
@@ -525,4 +562,4 @@ The application now provides a complete end-to-end experience that:
 * Publishes or updates professional GitHub portfolio repositories.
 * Prevents duplicate project creation during repository updates.
 
-The remaining work focuses on production-readiness improvements, including project filtering, enhanced UI feedback, expanded automated testing, and workflow refinements.
+The remaining work focuses on production-readiness improvements, including enhanced project-selection validation, investigation of the official Colaberry Network project catalog and category mappings, improved user feedback, expanded automated testing, and overall workflow refinements.
