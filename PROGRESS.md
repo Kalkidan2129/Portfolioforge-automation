@@ -355,6 +355,21 @@ Completed:
 * Added a scrollable Network Project list for improved usability.
 * Added selected-project counters for both My Projects and Network Projects.
 * Successfully validated portfolio generation using selected Network projects.
+* Added a loading state while Network projects are being retrieved.
+* Added an empty state when no projects are available in a category.
+* Added a persistent All-project count that remains stable when switching categories.
+* Verified the All-project count against the SQL Server total of 249 projects.
+* Fixed an early-return issue that prevented the total project count from refreshing.
+* Implemented real-time Network Project search by project title.
+* Integrated search with Network Project category filtering.
+* Added automatic search reset when switching categories.
+* Added live filtered-project result counts.
+* Added a search-specific empty state when no projects match the entered text.
+* Added a context-aware bulk-selection toggle for currently visible Network Projects.
+* Configured the bulk-selection toggle to display Select All when visible projects are not fully selected and Clear All when all visible projects are selected.
+* Limited bulk-selection actions to the active category and current search results.
+* Added dynamic button styling to distinguish the Select All and Clear All states.
+* Added a combined selected-project count across My Projects and Network Projects.
 
 Validation:
 
@@ -362,6 +377,62 @@ Validation:
 * Successfully filtered projects by category.
 * Successfully generated portfolios using selected Network projects.
 * Successfully validated category-based project selection.
+* Verified Network Project search across multiple categories.
+* Verified zero-result search behavior and empty-state messaging.
+* Verified the bulk-selection toggle selects only currently visible projects.
+* Verified the bulk-selection toggle clears only currently visible project selections.
+* Verified the button label automatically switches between Select All and Clear All.
+* Verified the button styling updates automatically based on the current selection state.
+* Verified category-specific bulk selection using Tableau and Qlik projects.
+* Verified My Project selections remain preserved during Network Project bulk actions.
+* Verified the combined selected-project count updates correctly.
+
+## Milestone 13 — GitHub Publishing Recovery and Error Handling
+
+**Status:** Verified
+
+Completed:
+
+* Added backend detection for portfolio-generation process failures.
+* Added failure details to the portfolio status endpoint.
+* Prevented the frontend from remaining stuck on the GitHub publishing stage after a failed push.
+* Added a visible user-facing error notification for GitHub authentication failures.
+* Added a Reconnect GitHub action directly within the failure state.
+* Cleared previous authentication errors after successful reconnection.
+* Updated the Git remote URL before every push so the latest OAuth token is used.
+* Added protection for Git operations when no new file changes are available to commit.
+* Verified successful portfolio generation after reconnecting GitHub.
+* Verified Create mode successfully publishes generated portfolios.
+* Verified Update mode preserves existing projects, skips duplicates, adds new projects, and updates the portfolio README.
+
+Validation:
+
+* GitHub authentication failure correctly reported in the UI.
+* Backend remains available after generator failure.
+* GitHub reconnection workflow tested successfully.
+* Create-mode GitHub publishing validated.
+* Update-mode GitHub publishing validated.
+* Existing project preservation validated.
+* Duplicate project prevention validated.
+* New project append workflow validated.
+
+## Milestone 14 — Review Workflow Improvements
+
+**Status:** Verified
+
+Completed:
+
+* Added an Edit Information action to the Review & Generate screen.
+* Configured Edit Information to return directly to the profile step.
+* Added an Edit Selected Projects action to the Review & Generate screen.
+* Configured Edit Selected Projects to return directly to the project-selection step.
+* Preserved profile information and selected projects while navigating back for edits.
+
+Validation:
+
+* Verified profile information remains populated after editing.
+* Verified selected projects remain selected after returning from the Review screen.
+* Verified users can return to the Review & Generate step without losing data.
 
 # Validation Evidence
 
@@ -487,8 +558,11 @@ Not included in the current implementation.
 
 ## High Priority
 
-* Enforce the maximum project-selection limit across My Projects and Network Projects.
-* Add a combined selected-project counter and selection-limit validation.
+* Complete end-to-end Create Portfolio validation.
+* Complete end-to-end Update Portfolio validation.
+* Improve dashboard image selection reliability.
+* Expand automated testing coverage.
+* Continue investigating the official Colaberry Network project catalog and category mappings.
 * Continue investigating the official Colaberry Network project catalog and category mappings.
 * Improve dashboard image selection reliability.
 * Expand automated testing coverage.

@@ -24,6 +24,8 @@ const sqlConfig = {
 let portfolioStatus = {
   step: 'Idle',
   completed: false,
+  failed: false,
+  error: '',
   portfolioUrl: ''
 };
 
@@ -81,8 +83,10 @@ if ((!formData.projectLinks || formData.projectLinks.length === 0) && formData.u
   portfolioStatus = {
     step: 'Starting portfolio generation...',
     completed: false,
+    failed: false,
+    error: '',
     portfolioUrl: ''
-  };
+};
 
   console.log('OAuth publish values:', {
   username: connectedGithubUser || 'MISSING_USERNAME',
@@ -154,9 +158,41 @@ const generator = spawn('node', ['src/index.js'], {
   }
 });
 
-  generator.stderr.on('data', (data) => {
-    console.error(data.toString());
-  });
+  let generatorError = '';
+
+generator.stderr.on('data', (data) => {
+  const errorText = data.toString();
+
+  generatorError += errorText;
+  console.error(errorText);
+});
+
+generator.on('close', (exitCode) => {
+  if (exitCode !== 0) {
+    let userMessage =
+      'Portfolio generation failed. Please try again.';
+
+    if (
+      generatorError.includes('Invalid username or token') ||
+      generatorError.includes('Authentication failed')
+    ) {
+      userMessage =
+        'GitHub authentication failed. Please reconnect your GitHub account and try again.';
+    }
+
+    portfolioStatus = {
+      step: 'Portfolio generation failed',
+      completed: false,
+      failed: true,
+      error: userMessage,
+      portfolioUrl: ''
+    };
+
+    console.error(
+      `Portfolio generator exited with code ${exitCode}: ${userMessage}`
+    );
+  }
+});
 
   res.json({
     success: true,

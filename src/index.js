@@ -343,9 +343,33 @@ if (contactIndex !== -1) {
 
   const git = simpleGit(publishFolder);
 
-  await git.add('.');
+// Always refresh the remote URL so Git uses the current OAuth token.
+const existingRemotes = await git.getRemotes(true);
+const originExists = existingRemotes.some(
+  (remote) => remote.name === 'origin'
+);
+
+if (originExists) {
+  await git.remote([
+    'set-url',
+    'origin',
+    repoUrl
+  ]);
+} else {
+  await git.addRemote('origin', repoUrl);
+}
+
+await git.add('.');
+
+const status = await git.status();
+
+if (status.files.length > 0) {
   await git.commit('Update generated portfolio');
-  await git.push('origin', 'main');
+} else {
+  console.log('No portfolio file changes to commit.');
+}
+
+await git.push('origin', 'main');
 
   console.log('\nPortfolio generated successfully!');
   console.log(`View your portfolio here: https://github.com/${username}/${repoName}`);

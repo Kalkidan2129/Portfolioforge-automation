@@ -23,15 +23,43 @@ function App() {
   const [projectSource, setProjectSource] = useState('my-projects');
   const [networkCategory, setNetworkCategory] = useState('All');
   const [networkCategories, setNetworkCategories] = useState([]);
+  const [allNetworkProjectsCount, setAllNetworkProjectsCount] = useState(0);
+  const [networkSearchQuery, setNetworkSearchQuery] = useState('');
 
+  const normalizeProjectTitle = (title = '') =>
+  title.trim().toLowerCase().replace(/\s+/g, ' ');
+
+const visibleNetworkProjects = networkProjects.filter(
+  (networkProject) => {
+    const isDuplicate = loadedProjects.some(
+      (myProject) =>
+        normalizeProjectTitle(myProject.title) ===
+        normalizeProjectTitle(networkProject.title)
+    );
+
+    const matchesSearch =
+      networkProject.title
+        .toLowerCase()
+        .includes(networkSearchQuery.toLowerCase());
+
+    return !isDuplicate && matchesSearch;
+  }
+);
+const allVisibleProjectsSelected =
+  visibleNetworkProjects.length > 0 &&
+  visibleNetworkProjects.every((project) =>
+    selectedProjectLinks.includes(project.projectLink)
+  );
+  
   const MAX_PROJECT_LINKS = 10;
   const selectedMyProjectsCount = loadedProjects.filter((project) =>
   selectedProjectLinks.includes(project.projectLink)
   ).length;
 
-  const selectedNetworkProjectsCount = networkProjects.filter((project) =>
+  const selectedNetworkProjectsCount = visibleNetworkProjects.filter((project) =>
   selectedProjectLinks.includes(project.projectLink)
   ).length;
+  const totalSelectedProjectsCount = selectedProjectLinks.length;
 
   const [statusMessage, setStatusMessage] = useState('Ready to generate your GitHub portfolio 🚀');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -136,23 +164,38 @@ const [generationStep, setGenerationStep] = useState(0);
         const statusResponse = await fetch('http://localhost:3001/portfolio-status');
         const statusData = await statusResponse.json();
 
-    if (statusData.completed) {
-      setGenerationStep(generationSteps.length);
-      setStatusMessage(`Portfolio generated successfully! View Portfolio: ${statusData.portfolioUrl}`);
-      setIsGenerating(false);
-      clearInterval(statusInterval);
-    } else {
-    const currentStatus = statusData.step || 'Portfolio generation is running...';
+if (statusData.failed) {
+  setStatusMessage(
+    statusData.error ||
+      'Portfolio generation failed. Please try again.'
+  );
+  setErrorMessage(
+    statusData.error ||
+      'Portfolio generation failed. Please try again.'
+  );
+  setIsGenerating(false);
+  clearInterval(statusInterval);
+} else if (statusData.completed) {
+  setGenerationStep(generationSteps.length);
+  setStatusMessage(
+    `Portfolio generated successfully! View Portfolio: ${statusData.portfolioUrl}`
+  );
+  setErrorMessage('');
+  setIsGenerating(false);
+  clearInterval(statusInterval);
+} else {
+  const currentStatus =
+    statusData.step || 'Portfolio generation is running...';
 
-    setStatusMessage(currentStatus);
+  setStatusMessage(currentStatus);
 
-    const stepIndex = generationSteps.findIndex(step =>
-      currentStatus.includes(step.title)
-    );
+  const stepIndex = generationSteps.findIndex((step) =>
+    currentStatus.includes(step.title)
+  );
 
-    if (stepIndex !== -1) {
-      setGenerationStep(stepIndex + 1);
-    }
+  if (stepIndex !== -1) {
+    setGenerationStep(stepIndex + 1);
+  }
 }
     } catch (error) {
     console.error(error);
@@ -414,7 +457,7 @@ const inputStyle = {
           background: '#ecfdf5',
           border: '1px solid #86efac',
           color: '#166534',
-          padding: '14px',
+          padding: '8px',
           borderRadius: '10px',
           marginBottom: '20px',
           fontWeight: '600'
@@ -621,11 +664,11 @@ const inputStyle = {
         background: githubConnected ? '#dcfce7' : '#fef3c7',
         border: githubConnected ? '1px solid #22c55e' : '1px solid #f59e0b',
         color: githubConnected ? '#166534' : '#92400e',
-        padding: '16px',
+        padding: '8px',
         borderRadius: '10px',
         marginBottom: '20px',
-        textAlign: 'left',
-        fontWeight: '600'
+        
+        fontWeight: '500'
       }}
     >
       {githubConnected ? (
@@ -911,9 +954,9 @@ const inputStyle = {
   onClick={async () => {
   setProjectSource('network-projects');
 
-  if (networkProjects.length > 0) {
+  {/*if (networkProjects.length > 0) {
     return;
-  }
+  }*/}
 
   setIsLoadingNetworkProjects(true);
   setErrorMessage('');
@@ -930,6 +973,7 @@ const inputStyle = {
     const data = await response.json();
 
     setNetworkProjects(data.projects || []);
+    setAllNetworkProjectsCount((data.projects || []).length);
 
 const categoryResponse = await fetch(
   'http://localhost:3001/api/colaberry/network-project-categories'
@@ -964,6 +1008,21 @@ setNetworkCategories(categoryData.categories || []);
       : `Network Projects (${selectedNetworkProjectsCount})`}
   </button>
 </div>
+
+<div
+  style={{
+    marginTop: '10px',
+    marginBottom: '18px',
+    fontSize: '14px',
+    color: '#475569',
+    fontWeight: '700',
+    textAlign: 'left'
+  }}
+>
+  {totalSelectedProjectsCount} project
+  {totalSelectedProjectsCount === 1 ? '' : 's'} selected
+</div>
+
 {projectSource === 'network-projects' && (
   <div
     style={{
@@ -977,7 +1036,9 @@ setNetworkCategories(categoryData.categories || []);
       type="button"
       onClick={async () => {
   setNetworkCategory('All');
+  setNetworkSearchQuery('');
   setIsLoadingNetworkProjects(true);
+  setNetworkProjects([]);
   setErrorMessage('');
 
   try {
@@ -1008,7 +1069,7 @@ setNetworkCategories(categoryData.categories || []);
         cursor: 'pointer'
       }}
     >
-      All
+      All ({allNetworkProjectsCount})
     </button>
 
     {networkCategories.map((category) => (
@@ -1017,7 +1078,9 @@ setNetworkCategories(categoryData.categories || []);
         type="button"
         onClick={async () => {
   setNetworkCategory(category.name);
+  setNetworkSearchQuery('');
   setIsLoadingNetworkProjects(true);
+  setNetworkProjects([]);
   setErrorMessage('');
 
   try {
@@ -1057,21 +1120,92 @@ setNetworkCategories(categoryData.categories || []);
 )}
     </div>
 
-    {loadedStudent && (
-      <div
-        style={{
-          background: '#ecfdf5',
-          border: '1px solid #86efac',
-          color: '#166534',
-          padding: '14px',
-          borderRadius: '10px',
-          marginBottom: '18px',
-          fontWeight: '600'
-        }}
-      >
-        ✅ Loaded profile: {loadedStudent.FirstName} {loadedStudent.LastName} — {loadedStudent.Email}
-      </div>
-    )}
+  {projectSource === 'network-projects' && (
+  <div style={{ marginBottom: '18px' }}>
+    <input
+      type="text"
+      value={networkSearchQuery}
+      onChange={(e) => setNetworkSearchQuery(e.target.value)}
+      placeholder="Search Network Projects..."
+      style={{
+        ...inputStyle,
+        height: '46px'
+      }}
+      onFocus={handleInputFocus}
+      onBlur={handleInputBlur}
+    />
+
+    <div
+  style={{
+    marginTop: '10px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '12px'
+  }}
+>
+  <div
+    style={{
+      fontSize: '13px',
+      color: '#64748b',
+      fontWeight: '600'
+    }}
+  >
+    {visibleNetworkProjects.length} project
+    {visibleNetworkProjects.length === 1 ? '' : 's'} found
+  </div>
+
+  <button
+  type="button"
+  onClick={() => {
+    const visibleProjectLinks = visibleNetworkProjects.map(
+      (project) => project.projectLink
+    );
+
+    if (allVisibleProjectsSelected) {
+      const visibleProjectLinksSet = new Set(visibleProjectLinks);
+
+      setSelectedProjectLinks((currentLinks) =>
+        currentLinks.filter(
+          (link) => !visibleProjectLinksSet.has(link)
+        )
+      );
+    } else {
+      setSelectedProjectLinks((currentLinks) => [
+        ...new Set([...currentLinks, ...visibleProjectLinks])
+      ]);
+    }
+  }}
+  disabled={visibleNetworkProjects.length === 0}
+  style={{
+    padding: '7px 14px',
+    border: '1px solid #2563eb',
+    borderRadius: '8px',
+    background:
+      visibleNetworkProjects.length === 0
+        ? '#f1f5f9'
+        : allVisibleProjectsSelected
+        ? '#ffffff'
+        : '#2563eb',
+    color:
+      visibleNetworkProjects.length === 0
+        ? '#94a3b8'
+        : allVisibleProjectsSelected
+        ? '#2563eb'
+        : '#ffffff',
+    fontWeight: '700',
+    cursor:
+      visibleNetworkProjects.length === 0
+        ? 'not-allowed'
+        : 'pointer'
+  }}
+>
+  {allVisibleProjectsSelected ? 'Clear All' : 'Select All'}
+</button>
+
+</div>
+  </div>
+)}
 
     <div
   style={{
@@ -1083,9 +1217,47 @@ setNetworkCategories(categoryData.categories || []);
     paddingRight: projectSource === 'network-projects' ? '8px' : '0'
   }}
 >
-      {(projectSource === 'my-projects'
+  {projectSource === 'network-projects' &&
+  isLoadingNetworkProjects && (
+    <div
+      style={{
+        padding: '28px',
+        textAlign: 'center',
+        background: '#eff6ff',
+        border: '1px solid #bfdbfe',
+        borderRadius: '10px',
+        color: '#1d4ed8',
+        fontWeight: '700'
+      }}
+    >
+      ⏳ Loading Network Projects...
+    </div>
+  )}
+
+  {projectSource === 'network-projects' &&
+  !isLoadingNetworkProjects &&
+  visibleNetworkProjects.length === 0 && (
+    <div
+      style={{
+        padding: '24px',
+        textAlign: 'center',
+        background: '#f8fafc',
+        border: '1px dashed #cbd5e1',
+        borderRadius: '10px',
+        color: '#64748b',
+        fontWeight: '600'
+      }}
+    >
+      {networkSearchQuery.trim()
+        ? 'No projects match your search.'
+        : 'No projects were found in this category.'}
+    </div>
+  )}
+
+     {(!isLoadingNetworkProjects || projectSource === 'my-projects') &&
+      (projectSource === 'my-projects'
         ? loadedProjects
-        : networkProjects
+        : visibleNetworkProjects
        ).map((project, index) => (
         <div
           key={index}
@@ -1227,9 +1399,46 @@ setNetworkCategories(categoryData.categories || []);
       boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
     }}
   >
-    <h3 style={{ marginTop: 0, marginBottom: '18px', color: '#111827' }}>
-  Your Information
-</h3>
+    
+<div
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '18px'
+  }}
+>
+  <h3
+    style={{
+      margin: 0,
+      color: '#111827'
+    }}
+  >
+    Your Information
+  </h3>
+
+  <button
+    type="button"
+    aria-label="Edit your information"
+    title="Edit your information"
+    onClick={() => setCurrentStep(1)}
+    style={{
+      width: '30px',
+      height: '30px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: '1px solid #cbd5e1',
+      borderRadius: '8px',
+      background: '#ffffff',
+      color: '#2563eb',
+      fontSize: '15px',
+      cursor: 'pointer'
+    }}
+  >
+    ✏️
+  </button>
+</div>
 
 <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
@@ -1306,12 +1515,48 @@ setNetworkCategories(categoryData.categories || []);
       boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
     }}
   >
-    <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#111827' }}>
-      Selected Projects
-    </h3>
+<div
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '18px'
+  }}
+>
+  <h3
+    style={{
+      margin: 0,
+      color: '#111827'
+    }}
+  >
+    Selected Projects
+  </h3>
+
+  <button
+    type="button"
+    aria-label="Edit selected projects"
+    title="Edit selected projects"
+    onClick={() => setCurrentStep(3)}
+    style={{
+      width: '30px',
+      height: '30px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: '1px solid #cbd5e1',
+      borderRadius: '8px',
+      background: '#ffffff',
+      color: '#2563eb',
+      fontSize: '15px',
+      cursor: 'pointer'
+    }}
+  >
+    ✏️
+  </button>
+</div>
 
 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', color: '#374151', width: '100%' }}>
-  {[...loadedProjects, ...networkProjects]
+  {[...loadedProjects, ...visibleNetworkProjects]
   .filter((project) =>
     selectedProjectLinks.includes(project.projectLink)
   )
@@ -1359,7 +1604,79 @@ setNetworkCategories(categoryData.categories || []);
   </div>
 </div>
 
-{generationStep > 0 && (
+{errorMessage && (
+  <div
+    role="alert"
+    style={{
+      marginTop: '20px',
+      marginBottom: '20px',
+      padding: '16px 18px',
+      background: '#fef2f2',
+      border: '1px solid #f87171',
+      borderRadius: '10px',
+      color: '#991b1b',
+      fontWeight: '600',
+      lineHeight: '1.5',
+      textAlign: 'left'
+    }}
+  >
+    <div
+      style={{
+        fontSize: '16px',
+        fontWeight: '700',
+        marginBottom: '6px'
+      }}
+    >
+      ❌ Portfolio generation failed
+    </div>
+
+    <div>{errorMessage}</div>
+    <button
+  type="button"
+  onClick={() => {
+    window.open(
+      'http://localhost:3001/auth/github',
+      'githubOAuthPopup',
+      'width=500,height=650,top=120,left=500,resizable=yes'
+    );
+    const checkConnection = setInterval(async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:3001/auth/github/status'
+      );
+
+      const data = await response.json();
+
+      if (data.connected) {
+        setGithubConnected(true);
+        setConnectedUsername(data.username);
+        setGithubUsername(data.username);
+        setErrorMessage('');
+        setStatusMessage('GitHub reconnected successfully.');
+        clearInterval(checkConnection);
+      }
+    } catch (error) {
+      console.error('GitHub reconnection check failed:', error);
+    }
+  }, 2000);
+  }}
+  style={{
+    marginTop: '14px',
+    padding: '10px 16px',
+    background: '#dc2626',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '700',
+    cursor: 'pointer'
+  }}
+>
+  Reconnect GitHub
+</button>
+  </div>
+)}
+
+{generationStep > 0 && !errorMessage && (
   <div style={{
     background: '#ffffff',
     padding: '24px',
